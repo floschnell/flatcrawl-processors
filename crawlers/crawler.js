@@ -16,17 +16,6 @@ class Crawler {
          */
         this.window = null;
     }
-
-    /**
-     * Gets the text within the given html element.
-     * 
-     * @param {HTMLElement} element
-     * 
-     * @memberOf Crawler
-     */
-    _getTextOfElement(element) {
-
-    }
     
     /**
      * Gets the window object for the page that we want to crawl.
