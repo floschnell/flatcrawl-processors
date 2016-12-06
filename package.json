@@ -7,7 +7,9 @@
     "firebase": "^3.6.1",
     "jsdom": "^9.8.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "telegraf": "^3.6.1"
+  },
   "scripts": {},
   "author": "Florian Schnell",
   "license": "ISC",

@@ -1,7 +1,7 @@
-const Flat = require('./models/flat');
-const Crawler = require('./crawlers/crawler');
-const ImmoScout24 = require('./crawlers/immoscout24');
-const Database = require('./data/firebase');
+const Flat = require('../models/flat');
+const Crawler = require('../crawlers/crawler');
+const ImmoScout24 = require('../crawlers/immoscout24');
+const Database = require('../data/firebase');
 
 const immoCrawler = new ImmoScout24(
     'www.immobilienscout24.de',
@@ -36,11 +36,19 @@ function crawlFlats(crawlers) {
 function sendFlatsToDatabase(flats) {
     console.log('sending flats to database ...');
 
-    flats.forEach(
-        database.saveFlat.bind(database)
+    Promise.all(
+        flats.map(
+            flat => database.saveFlat(flat)
+        )
+    ).then(results =>
+        results.forEach(result => {
+            if (result !== null) {
+                console.log('Saved flat');
+            }
+        })
+    ).then(() =>
+        console.log('done.')
     );
-
-    console.log('done.');
 }
 
 /**

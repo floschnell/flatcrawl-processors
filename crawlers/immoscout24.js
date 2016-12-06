@@ -20,7 +20,8 @@ class ImmoScout24 extends Crawler {
             address: this.getTextSimple(flatElement, '.result-list-entry__address > span'),
             rent: this.getTextSimple(flatElement, '.result-list-entry__criteria dl:nth-child(1) dd'),
             squaremeters: this.getTextSimple(flatElement, '.result-list-entry__criteria dl:nth-child(2) dd'),
-            rooms: this.getTextSimple(flatElement, '.result-list-entry__criteria dl:nth-child(3) dd')
+            rooms: this.getTextSimple(flatElement, '.result-list-entry__criteria dl:nth-child(3) dd'),
+            date: new Date().getTime()
         });
     }
 

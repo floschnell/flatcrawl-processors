@@ -14,7 +14,11 @@ function evaluateFlat(client, flat) {
         if (flat.hasOwnProperty(attribute)) {
             const attributeValue = flat[attribute];
 
-            if (attributeValue > limit.max || attributeValue < limit.min) {
+            if (limit.max && attributeValue > limit.max) {
+                return false;
+            }
+
+            if (limit.min && attributeValue < limit.min) {
                 return false;
             }
         }

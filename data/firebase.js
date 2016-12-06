@@ -19,9 +19,15 @@ class Database {
      * @memberOf Database
      */
     saveFlat(flat) {
-        console.log('saving flat', flat.externalid);
+        const flatRef = this.database.ref(`flats/${flat.externalid}`);
 
-        this.database.ref(`flats/${flat.externalid}`).set(flat);
+        return flatRef.once('value').then(snapshot => {
+            if (!snapshot.exists()) {
+                this.database.ref(`flats/${flat.externalid}`).set(flat);
+                return flat.externalid;
+            }
+            return null;
+        });
     }
 
     /**
@@ -56,6 +62,10 @@ class Database {
                 resolve(Object.values(flats));
             });
         });
+    }
+
+    getNewFlats(callback) {
+        this.database.ref('flats').orderByChild('date').limitToLast(15).on('child_added', snapshot => callback(snapshot.val()));
     }
 }
 

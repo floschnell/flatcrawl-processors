@@ -5,13 +5,14 @@
  * @class Flat
  */
 class Flat {
-    constructor ({externalid, title, address, rent, squaremeters, rooms}) {
+    constructor ({externalid, title, address, rent, squaremeters, rooms, date}) {
         this.externalid = externalid;
         this.title = title.trim();
         this.address = address.trim();
         this.rent = rent.match(/[\d\,]/g).join('');
         this.squaremeters = squaremeters.match(/[\d\.,]/g).join('');
         this.rooms = rooms.match(/[\d,]/g).join('');
+        this.date = date;
     }
 }
 
