@@ -52,14 +52,14 @@ class Database {
      * 
      * @memberOf Database
      */
-    getFlats() {
+    getLatestFlat() {
         return new Promise(resolve => {
             const flatRefs = this.database.ref('flats');
 
-            flatRefs.once('value', snapshot => {
+            flatRefs.limitToLast(1).once('value', snapshot => {
                 const flats = snapshot.val();
 
-                resolve(Object.values(flats));
+                resolve(Object.values(flats)[0]);
             });
         });
     }

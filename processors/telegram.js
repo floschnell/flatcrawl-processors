@@ -10,6 +10,7 @@ const telegraf = new Telegraf('***REMOVED***');
 const telegram = new Telegraf.Telegram('***REMOVED***');
 
 let chatsToInform = [];
+let lastCheck = 0;
 
 telegraf.command(['startUpdate'], (ctx) => {
     const newChat = ctx.update.message.chat;
@@ -41,6 +42,10 @@ telegraf.command(['stopUpdate'], (ctx) => {
     return ctx.reply(`I will not be sending you new flats anymore.`);
 });
 
+telegraf.command(['status'], (ctx) => {
+    ctx.reply(`Yup, I'm here. I checked the last flat on ${lastCheck}`);
+});
+
 telegraf.hears(['thanks', 'thank you', 'ty'], (ctx) => {
     return ctx.reply(`You're welcome!`);
 });
@@ -64,6 +69,8 @@ dbConnection.getClients().then(clients =>
 ).then(clients => {
     dbConnection.getNewFlats(flat =>
         clients.forEach(client => {
+            lastCheck = new Date();
+
             if (evaluateFlat(client, flat)) {
                 Directions.getCoordsForAddress(flat.address).then(flatGeo =>
                     Promise.all(
