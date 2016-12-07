@@ -9,12 +9,40 @@ const dbConnection = new Database();
 const telegraf = new Telegraf('***REMOVED***');
 const telegram = new Telegraf.Telegram('***REMOVED***');
 
-const chatsToInform = [];
+let chatsToInform = [];
 
 telegraf.command(['startUpdate'], (ctx) => {
-    console.log(ctx.update.message.chat);
-    chatsToInform.push(ctx.update.message.chat);
-    return ctx.reply('Sure ' + ctx.update.message.chat.first_name + ', will keep you up to date!');
+    const newChat = ctx.update.message.chat;
+
+    if (chatsToInform.some(chat => chat.id === newChat.id)) {
+        console.log(`already sending updates in chat ${newChat.id}`);
+
+        return ctx.reply(`Sure, I'm already on it 👍`);
+    } else {
+        console.log(`start sending updates in chat ${newChat.id} with ${newChat.first_name}`);
+        chatsToInform.push(ctx.update.message.chat);
+
+        if (newChat.first_name) {
+            return ctx.reply(`Ok ${newChat.first_name}, I will keep my eyes open 🔎`);
+        } else {
+            return ctx.reply(`Ok, I will keep my eyes open 🔎 and report my findings here ...`);
+        }
+    }
+});
+
+telegraf.command(['stopUpdate'], (ctx) => {
+    const chatToRemove = ctx.update.message.chat;
+
+    console.log(`will remove chat ${chatToRemove.id} with ${chatToRemove.first_name}`);
+    chatsToInform = chatsToInform.filter(
+        chat => chat.id !== chatToRemove.id
+    );
+
+    return ctx.reply(`I will not be sending you new flats anymore.`);
+});
+
+telegraf.hears(['thanks', 'thank you', 'ty'], (ctx) => {
+    return ctx.reply(`You're welcome!`);
 });
 
 telegraf.startPolling();
