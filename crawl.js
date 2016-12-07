@@ -1,7 +1,7 @@
-const Flat = require('../models/flat');
-const Crawler = require('../crawlers/crawler');
-const ImmoScout24 = require('../crawlers/immoscout24');
-const Database = require('../data/firebase');
+const Flat = require('./models/flat');
+const Crawler = require('./crawlers/crawler');
+const ImmoScout24 = require('./crawlers/immoscout24');
+const Database = require('./data/firebase');
 
 const immoCrawler = new ImmoScout24(
     'www.immobilienscout24.de',
