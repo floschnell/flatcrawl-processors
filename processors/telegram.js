@@ -88,15 +88,13 @@ dbConnection.getClients().then(clients =>
                         let message = [];
                         const salution = chat.first_name ? chat.first_name : 'guys';
 
-                        message.push(`Hey ${chat.first_name}, found a new flat!`);
-                        message.push(`It's described as "${flat.title}"`);
-                        message.push(`The flat costs ${flat.rent}€ rent. It has ${flat.rooms} rooms and ${flat.squaremeters} sqm.`);
+                        message.push(`Hey ${salution}, found a new flat!`);
+                        message.push(`[${flat.title}](http://www.immobilienscout24.de/expose/${flat.externalid})`);
+                        message.push(`The flat costs *${flat.rent}€* rent. It has *${flat.rooms} rooms* and *${flat.squaremeters} sqm*.`);
 
                         directions.forEach(direction => {
-                            message.push(`From this flat to **${direction.name}** will take you **${direction.duration}** (${direction.distance}) by ${direction.transport}`);
+                            message.push(`From this flat to *${direction.name}* will take you *${direction.duration}* (${direction.distance}) by ${direction.transport}`);
                         });
-
-                        message.push(`[Checkout the details here](http://www.immobilienscout24.de/expose/${flat.externalid})`);
 
                         telegram.sendMessage(chat.id, message.join("\n"), {parse_mode: 'Markdown'});
                     })
