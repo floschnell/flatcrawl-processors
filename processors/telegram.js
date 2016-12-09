@@ -86,13 +86,14 @@ dbConnection.getClients().then(clients =>
                 ).then(directions => {
                     chatsToInform.forEach(chat => {
                         let message = [];
+                        const salution = chat.first_name ? chat.first_name : 'guys';
 
                         message.push(`Hey ${chat.first_name}, found a new flat!`);
                         message.push(`It's described as "${flat.title}"`);
                         message.push(`The flat costs ${flat.rent}€ rent. It has ${flat.rooms} rooms and ${flat.squaremeters} sqm.`);
 
                         directions.forEach(direction => {
-                            message.push(`From this flat to ${direction.name} will take you ${direction.duration} (${direction.distance}) by ${direction.transport}`);
+                            message.push(`From this flat to **${direction.name}** will take you **${direction.duration}** (${direction.distance}) by ${direction.transport}`);
                         });
 
                         message.push(`[Checkout the details here](http://www.immobilienscout24.de/expose/${flat.externalid})`);
