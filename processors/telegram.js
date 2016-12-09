@@ -75,7 +75,7 @@ dbConnection.getClients().then(clients =>
                 Directions.getCoordsForAddress(flat.address).then(flatGeo =>
                     Promise.all(
                         client.locations.map(location =>
-                            Directions.getDirections(location.geo, flatGeo).then(direction => ({
+                            Directions.getDirections(location.geo, flatGeo, location.transport).then(direction => ({
                                 duration: direction.duration.text,
                                 distance: direction.distance.text,
                                 transport: location.transport,

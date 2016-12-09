@@ -19,12 +19,12 @@ function getCoordsForAddress(address) {
     });
 }
 
-function getDirections(origin, destination) {
+function getDirections(origin, destination, mode) {
     return new Promise(resolve => {
         mapsClient.directions({
             origin,
             destination,
-            mode: 'driving'
+            mode
         }).asPromise().then(response => {
             if (response.json.routes.length > 0) {
                 const route = response.json.routes[0];
