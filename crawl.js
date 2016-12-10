@@ -16,7 +16,7 @@ const immoWeltCrawler = new ImmoWeltCrawler(
     '/liste/muenchen/wohnungen/mieten?sort=relevanz'
 );
 
-const crawlers = [ immoWeltCrawler ];
+const crawlers = [ immoWeltCrawler, immoScout24Crawler ];
 const database = new Database();
 
 /**

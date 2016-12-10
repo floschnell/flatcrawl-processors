@@ -19,10 +19,10 @@ class Database {
      * @memberOf Database
      */
     saveFlat(flat) {
-        const flatRef = this.database.ref(`flats/${flat.externalid}`);
+        const flatsRef = this.database.ref(`flats`);
 
-        return flatRef.once('value').then(snapshot => {
-            if (!snapshot.exists()) {
+        return flatsRef.once('value').then(snapshot => {
+            if (!snapshot.exists() || !snapshot.hasChild(flat.externalid)) {
                 this.database.ref(`flats/${flat.externalid}`).set(flat);
                 return flat;
             }

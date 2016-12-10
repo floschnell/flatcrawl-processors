@@ -9,8 +9,8 @@ const Flat = require('../models/flat.js');
  */
 class ImmoScout24Crawler extends Crawler {
 
-    constructor(inhost, inpath) {
-        super(inhost, inpath);
+    constructor(name, inhost, inpath) {
+        super(name, inhost, inpath);
     }
 
     _parseFlat(flatElement) {
