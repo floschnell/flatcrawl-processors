@@ -5,7 +5,8 @@
  * @class Flat
  */
 class Flat {
-    constructor ({externalid, title, address, rent, squaremeters, rooms, date}) {
+    constructor ({source, externalid, title, address, rent, squaremeters, rooms, date}) {
+        this.source = source;
         this.externalid = externalid;
         this.title = title.trim();
         this.address = address.trim();

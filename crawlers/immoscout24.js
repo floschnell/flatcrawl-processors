@@ -15,6 +15,7 @@ class ImmoScout24Crawler extends Crawler {
 
     _parseFlat(flatElement) {
         return new Flat({
+            source: this.name,
             externalid: this.getAttribute(flatElement, null, 'data-obid'),
             title: this.getText(flatElement, '.result-list-entry__brand-title'),
             address: this.getTextSimple(flatElement, '.result-list-entry__address > span'),

@@ -86,10 +86,17 @@ dbConnection.getClients().then(clients =>
                 ).then(directions => {
                     chatsToInform.forEach(chat => {
                         let message = [];
+                        let url = '';
                         const salution = chat.first_name ? chat.first_name : 'guys';
 
+                        if (flat.source === 'immoscout') {
+                            url = `http://www.immobilienscout24.de/expose/${flat.externalid}`;
+                        } else if (flat.source === 'immowelt') {
+                            url = `https://www.immowelt.de/expose/${flat.externalid}`;
+                        }
+
                         message.push(`Hey ${salution}, found a new flat!`);
-                        message.push(`[${flat.title}](http://www.immobilienscout24.de/expose/${flat.externalid})`);
+                        message.push(`[${flat.title}](${url})`);
                         message.push(`The flat costs *${flat.rent}€* rent. It has *${flat.rooms} rooms* and *${flat.squaremeters} sqm*.`);
 
                         directions.forEach(direction => {

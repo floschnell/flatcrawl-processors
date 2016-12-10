@@ -7,7 +7,8 @@ const jsdom = require('jsdom');
  * @class Crawler
  */
 class Crawler {
-    constructor(inhost, inpath) {
+    constructor(name, inhost, inpath) {
+        this.name = name;
         this.host = inhost;
         this.path = inpath;
 

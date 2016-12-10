@@ -15,6 +15,7 @@ class ImmoWeltCrawler extends Crawler {
 
     _parseFlat(flatElement) {
         return new Flat({
+            source: this.name,
             externalid: this.getAttribute(flatElement, null, 'data-estateid'),
             title: this.getText(flatElement, '.listcontent h2'),
             address: this.getTextSimple(flatElement, '.listlocation')

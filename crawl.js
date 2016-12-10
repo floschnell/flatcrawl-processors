@@ -5,11 +5,13 @@ const ImmoScout24Crawler = require('./crawlers/immoscout24');
 const ImmoWeltCrawler = require('./crawlers/immowelt');
 
 const immoScout24Crawler = new ImmoScout24Crawler(
+    'immoscout',
     'www.immobilienscout24.de',
     '/Suche/S-2/P-1/Wohnung-Miete/Bayern/Muenchen?pagerReporting=true'
 );
 
 const immoWeltCrawler = new ImmoWeltCrawler(
+    'immowelt',
     'www.immowelt.de',
     '/liste/muenchen/wohnungen/mieten?sort=relevanz'
 );
