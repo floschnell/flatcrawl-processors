@@ -75,7 +75,7 @@ dbConnection.getClients().then(clients =>
                 Directions.getCoordsForAddress(flat.address).then(flatGeo =>
                     Promise.all(
                         client.locations.map(location =>
-                            Directions.getDirections(location.geo, flatGeo).then(direction => ({
+                            Directions.getDirections(location.geo, flatGeo, location.transport).then(direction => ({
                                 duration: direction.duration.text,
                                 distance: direction.distance.text,
                                 transport: location.transport,
@@ -86,16 +86,15 @@ dbConnection.getClients().then(clients =>
                 ).then(directions => {
                     chatsToInform.forEach(chat => {
                         let message = [];
+                        const salution = chat.first_name ? chat.first_name : 'guys';
 
-                        message.push(`Hey ${chat.first_name}, found a new flat!`);
-                        message.push(`It's described as "${flat.title}"`);
-                        message.push(`The flat costs ${flat.rent}€ rent. It has ${flat.rooms} rooms and ${flat.squaremeters} sqm.`);
+                        message.push(`Hey ${salution}, found a new flat!`);
+                        message.push(`[${flat.title}](http://www.immobilienscout24.de/expose/${flat.externalid})`);
+                        message.push(`The flat costs *${flat.rent}€* rent. It has *${flat.rooms} rooms* and *${flat.squaremeters} sqm*.`);
 
                         directions.forEach(direction => {
-                            message.push(`From this flat to ${direction.name} will take you ${direction.duration} (${direction.distance}) by ${direction.transport}`);
+                            message.push(`From this flat to *${direction.name}* will take you *${direction.duration}* (${direction.distance}) by ${direction.transport}`);
                         });
-
-                        message.push(`[Checkout the details here](http://www.immobilienscout24.de/expose/${flat.externalid})`);
 
                         telegram.sendMessage(chat.id, message.join("\n"), {parse_mode: 'Markdown'});
                     })
