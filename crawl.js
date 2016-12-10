@@ -1,14 +1,20 @@
 const Flat = require('./models/flat');
-const Crawler = require('./crawlers/crawler');
-const ImmoScout24 = require('./crawlers/immoscout24');
 const Database = require('./data/firebase');
 
-const immoCrawler = new ImmoScout24(
+const ImmoScout24Crawler = require('./crawlers/immoscout24');
+const ImmoWeltCrawler = require('./crawlers/immowelt');
+
+const immoScout24Crawler = new ImmoScout24Crawler(
     'www.immobilienscout24.de',
     '/Suche/S-2/P-1/Wohnung-Miete/Bayern/Muenchen?pagerReporting=true'
 );
 
-const crawlers = [ immoCrawler ];
+const immoWeltCrawler = new ImmoWeltCrawler(
+    'www.immowelt.de',
+    '/liste/muenchen/wohnungen/mieten?sort=relevanz'
+);
+
+const crawlers = [ immoWeltCrawler ];
 const database = new Database();
 
 /**
@@ -43,7 +49,7 @@ function sendFlatsToDatabase(flats) {
     ).then(results =>
         results.forEach(result => {
             if (result !== null) {
-                console.log('Saved flat');
+                console.log('Saved flat:', JSON.stringify(result));
             }
         })
     ).then(() =>

@@ -4,10 +4,10 @@ const Flat = require('../models/flat.js');
 /**
  * ImmoScout24 crawler implementation.
  * 
- * @class ImmoScout24
+ * @class ImmoScout24Crawler
  * @extends {Crawler}
  */
-class ImmoScout24 extends Crawler {
+class ImmoScout24Crawler extends Crawler {
 
     constructor(inhost, inpath) {
         super(inhost, inpath);
@@ -34,4 +34,4 @@ class ImmoScout24 extends Crawler {
     }
 };
 
-module.exports = ImmoScout24;
+module.exports = ImmoScout24Crawler;

@@ -24,7 +24,7 @@ class Database {
         return flatRef.once('value').then(snapshot => {
             if (!snapshot.exists()) {
                 this.database.ref(`flats/${flat.externalid}`).set(flat);
-                return flat.externalid;
+                return flat;
             }
             return null;
         });
