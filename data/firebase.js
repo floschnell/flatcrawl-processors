@@ -22,8 +22,8 @@ class Database {
         const flatsRef = this.database.ref(`flats`);
 
         return flatsRef.once('value').then(snapshot => {
-            if (!snapshot.exists() || !snapshot.hasChild(flat.externalid)) {
-                this.database.ref(`flats/${flat.externalid}`).set(flat);
+            if (!snapshot.exists() || !snapshot.hasChild(flat.getInternalId())) {
+                this.database.ref(`flats/${flat.getInternalId()}`).set(flat);
                 return flat;
             }
             return null;

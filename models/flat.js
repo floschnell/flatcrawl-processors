@@ -15,6 +15,10 @@ class Flat {
         this.rooms = rooms.match(/[\d,]/g).join('');
         this.date = date;
     }
+
+    getInternalId() {
+        return `${this.source}-${this.externalid}`;
+    }
 }
 
 module.exports = Flat;
