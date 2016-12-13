@@ -17,7 +17,8 @@ class Flat {
     }
 
     getInternalId() {
-        const externalId = this.externalid.replace('.', '_');
+        const externalId = this.externalid.split('.').join('_');
+        
         return `${this.source}-${externalId}`;
     }
 }

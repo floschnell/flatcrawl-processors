@@ -20,7 +20,7 @@ const wgGesuchtCrawler = new WGGesuchtCrawler(
     '/wohnungen-in-Muenchen.90.2.0.0.html'
 );
 
-const crawlers = [ wgGesuchtCrawler ];
+const crawlers = [ wgGesuchtCrawler, immoWeltCrawler, immoScout24Crawler ];
 const database = new Database();
 
 /**
