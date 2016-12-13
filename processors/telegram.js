@@ -93,6 +93,8 @@ dbConnection.getClients().then(clients =>
                             url = `http://www.immobilienscout24.de/expose/${flat.externalid}`;
                         } else if (flat.source === 'immowelt') {
                             url = `https://www.immowelt.de/expose/${flat.externalid}`;
+                        } else if (flat.source === 'wggesucht') {
+                            url = `https://www.wg-gesucht.de/${flat.externalid}`;
                         }
 
                         message.push(`Hey ${salution}, found a new flat!`);

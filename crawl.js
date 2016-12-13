@@ -3,20 +3,24 @@ const Database = require('./data/firebase');
 
 const ImmoScout24Crawler = require('./crawlers/immoscout24');
 const ImmoWeltCrawler = require('./crawlers/immowelt');
+const WGGesuchtCrawler = require('./crawlers/wggesucht');
 
 const immoScout24Crawler = new ImmoScout24Crawler(
-    'immoscout',
     'www.immobilienscout24.de',
     '/Suche/S-2/P-1/Wohnung-Miete/Bayern/Muenchen?pagerReporting=true'
 );
 
 const immoWeltCrawler = new ImmoWeltCrawler(
-    'immowelt',
     'www.immowelt.de',
     '/liste/muenchen/wohnungen/mieten?sort=relevanz'
 );
 
-const crawlers = [ immoWeltCrawler, immoScout24Crawler ];
+const wgGesuchtCrawler = new WGGesuchtCrawler(
+    'www.wg-gesucht.de',
+    '/wohnungen-in-Muenchen.90.2.0.0.html'
+);
+
+const crawlers = [ wgGesuchtCrawler ];
 const database = new Database();
 
 /**

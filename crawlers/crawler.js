@@ -27,9 +27,14 @@ class Crawler {
      */
     _getHtml() {
         return new Promise((resolve, reject) => {
+            console.log('address: ', this.host + this.path);
+
             https.request({
                 host: this.host,
-                path: this.path
+                path: this.path,
+                headers: {
+                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36"
+                }
             }, response => {
                 let html = '';
                 response.on('data', chunk => {

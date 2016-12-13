@@ -9,8 +9,8 @@ const Flat = require('../models/flat.js');
  */
 class ImmoWeltCrawler extends Crawler {
 
-    constructor(name, inhost, inpath) {
-        super(name, inhost, inpath);
+    constructor(inhost, inpath) {
+        super('immowelt', inhost, inpath);
     }
 
     _parseFlat(flatElement) {
