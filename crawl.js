@@ -17,7 +17,7 @@ const immoWeltCrawler = new ImmoWeltCrawler(
 
 const wgGesuchtCrawler = new WGGesuchtCrawler(
     'www.wg-gesucht.de',
-    '/wohnungen-in-Muenchen.90.2.0.1.html'
+    '/wohnungen-in-Muenchen.90.2.0.0.html'
 );
 
 const crawlers = [ wgGesuchtCrawler, immoWeltCrawler, immoScout24Crawler ];
