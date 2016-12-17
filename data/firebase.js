@@ -1,4 +1,6 @@
 const firebase = require('firebase');
+const Client = require('../models/client');
+const Flat = require('../models/flat');
 
 class Database {
 
@@ -42,7 +44,10 @@ class Database {
             clientsRef.once('value', snapshot => {
                 const clientsByUID = snapshot.val();
 
-                resolve(Object.values(clientsByUID));
+                for (const uid in clientsByUID) {
+                    clientsByUID[uid] = new Client(clientsByUID[uid]);
+                }
+                resolve(clientsByUID);
             });
         });
     }
@@ -52,19 +57,45 @@ class Database {
      * 
      * @memberOf Database
      */
-    getLatestFlat() {
-        return new Promise(resolve => {
-            const flatRefs = this.database.ref('flats');
-
-            flatRefs.limitToLast(1).once('value', snapshot => {
-                const flats = snapshot.val();
-
-                resolve(Object.values(flats)[0]);
-            });
+    onNewClient(callback) {
+        const clientsRef = this.database.ref('clients');
+        clientsRef.on('child_added', snapshot => {
+            callback(snapshot);
         });
     }
 
-    getNewFlats(callback) {
+    /**
+     * @returns {PromiseLike.<Array.{Flat}>>}
+     * 
+     * @memberOf Database
+     */
+    onClientChanged(callback) {
+        const clientsRef = this.database.ref('clients');
+        clientsRef.on('child_changed', snapshot => {
+            callback(snapshot);
+        });
+    }
+
+    /**
+     * @returns {PromiseLike.<Array.{Flat}>>}
+     * 
+     * @memberOf Database
+     */
+    getLatestFlats() {
+        return new Promise(resolve => 
+            this.database.ref('flats').orderByChild('date').limitToLast(15).once('value', snapshot => {
+                const flats = Object.values(snapshot.val());
+
+                resolve(
+                    flats.map(
+                        flat => new Flat(flat)
+                    )
+                );
+            })
+        );
+    }
+
+    onNewFlat(callback) {
         this.database.ref('flats').orderByChild('date').limitToLast(15).on('child_added', snapshot => callback(snapshot.val()));
     }
 }

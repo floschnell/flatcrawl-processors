@@ -1,23 +1,10 @@
-/**
- * 
- * @class Client
- */
-class Client {
-    constructor ({mail, limits, location}) {
-        this.mail = mail;
-        this.location = location;
-        this.limits = limits;
-    }
+const Location = require('./location');
 
-    /**
-     * 
-     * 
-     * @returns {Array.<{attributeName:string,min:number,max:number}>}
-     * 
-     * @memberOf Client
-     */
-    getLimits() {
-        return this.limits;
+class Client {
+    constructor ({mail, limits, locations}) {
+        this.mail = mail;
+        this.locations = locations.map(location => new Location(location));
+        this.limits = limits;
     }
 }
 
