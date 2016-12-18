@@ -69,6 +69,18 @@ class Database {
      * 
      * @memberOf Database
      */
+    onRemovedClient(callback) {
+        const clientsRef = this.database.ref('clients');
+        clientsRef.on('child_removed', snapshot => {
+            callback(snapshot.key, new Client(snapshot.val()));
+        });
+    }
+
+    /**
+     * @returns {PromiseLike.<Array.{Flat}>>}
+     * 
+     * @memberOf Database
+     */
     onClientChanged(callback) {
         const clientsRef = this.database.ref('clients');
         clientsRef.on('child_changed', snapshot => {

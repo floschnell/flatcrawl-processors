@@ -297,6 +297,11 @@ dbConnection.onNewClient((clientUID, client) => {
     )
 });
 
+dbConnection.onRemovedClient((clientUID, client) => {
+    console.log('removed client', clientUID, JSON.stringify(client));
+    delete clients[clientUID];
+});
+
 dbConnection.onClientChanged((clientUID, client) => {
     clients[clientUID] = client;
 
