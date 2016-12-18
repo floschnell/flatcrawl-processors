@@ -1,7 +1,6 @@
 const firebase = require('firebase');
 const Client = require('../models/client');
 const Flat = require('../models/flat');
-const sha256 = require('sha256');
 
 class Database {
 
