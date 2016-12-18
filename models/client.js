@@ -1,10 +1,18 @@
 const Location = require('./location');
 
 class Client {
-    constructor ({mail, limits, locations}) {
-        this.mail = mail;
-        this.locations = locations.map(location => new Location(location));
-        this.limits = limits;
+    constructor ({limits, locations, chats}) {
+        if (locations) {
+            this.locations = locations.map(
+                location => new Location(location)
+            );
+        } else {
+            this.locations = [];
+        }
+        
+        this.limits = limits || {};
+
+        this.chats = chats || {};
     }
 }
 
