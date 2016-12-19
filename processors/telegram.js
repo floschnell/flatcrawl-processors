@@ -26,8 +26,9 @@ const supportedTransportModes = [
     }
 ];
 
-let chatsToInform = [];
 let lastCheck = 0;
+let initialized = false;
+let clients = {};
 
 telegraf.use(memorySession());
 
@@ -46,22 +47,20 @@ telegraf.command(['search'], ctx => {
     );
 });
 
-
 telegraf.command(['subscribe'], ctx => {
     const chat = ctx.chat;
     const searchId = ctx.message.text.replace('/subscribe', '').trim();
 
     if (searchId.length > 0) {
-        dbConnection.getClient(searchId).then(client => {
-            if (client !== null) {
-                client.chats[chat.id] = true;
-                dbConnection.updateClient(searchId, client).then(() => {
+        dbConnection.clientExists(searchId).then(exists => {
+            if (exists) {
+                dbConnection.subscribeChatToClient(chat.id, searchId).then(() => {
                     return ctx.reply(`I will update you within this chat!`);
                 });
             } else {
-                return ctx.reply(`The search that you want to subscribe to does not exist!`);
+                return ctx.reply(`I do not know this search ID.`);
             }
-        })
+        });
     } else {
         return ctx.reply(`Please provide me the search ID that you want to subscribe to.`);
     }
@@ -72,19 +71,33 @@ telegraf.command(['unsubscribe'], ctx => {
     const searchId = ctx.message.text.replace('/unsubscribe', '').trim();
 
     if (searchId.length > 0) {
-        dbConnection.getClient(searchId).then(client => {
-            if (client !== null) {
-                client.chats[chat.id] = false;
-                dbConnection.updateClient(searchId, client).then(() => {
-                    return ctx.reply(`I will not be sending you updates within this chat anymore!`);
+        dbConnection.clientExists(searchId).then(exists => {
+            if (exists) {
+                dbConnection.unsubscribeChatFromClient(chat.id, searchId).then(() => {
+                    return ctx.reply(`I will not be sending you updates within this chat anymore.`);
                 });
             } else {
-                return ctx.reply(`The search that you want to unsubscribe from does not exist!`);
+                return ctx.reply(`I do not know this search ID.`);
             }
-        })
+        });
     } else {
         ctx.reply(`Please provide me the search ID that you want to unsubscribe from.`);
     }
+});
+
+telegraf.command(['status'], (ctx) => {
+    ctx.reply(`Yup, I'm here. I checked the last flat on ${lastCheck}`);
+});
+
+telegraf.command(['subscriptions'], (ctx) => {
+    dbConnection.getSubscriptionsForChat(ctx.chat.id).then(subscriptions => {
+        if (subscriptions) {
+            const subscriptionKeys = Object.keys(subscriptions).map(subscription => `*${subscription}*`);
+            return ctx.reply(`I am currently sending you updates in this chat for following search IDs: ${subscriptionKeys.join(', ')}`, {parse_mode: 'Markdown'});
+        } else {
+            return ctx.reply(`I am currently not sending you updates in this chat.`);
+        }
+    });
 });
 
 telegraf.on('text', ctx => {
@@ -206,14 +219,6 @@ telegraf.on('text', ctx => {
     }
 });
 
-telegraf.command(['status'], (ctx) => {
-    ctx.reply(`Yup, I'm here. I checked the last flat on ${lastCheck}`);
-});
-
-telegraf.hears(['thanks', 'thank you', 'ty'], (ctx) => {
-    return ctx.reply(`You're welcome!`);
-});
-
 telegraf.startPolling();
 
 function calculateDirections(client, flat) {
@@ -276,39 +281,49 @@ function checkClient(client, flat) {
     }
 }
 
-const clients = {};
+dbConnection.onNewFlat(flat => {
+    if (initialized) {
+        Object.values(clients).forEach(client => {
+            lastCheck = new Date();
 
-dbConnection.onNewFlat(flat =>
-    Object.values(clients).forEach(client => {
-        lastCheck = new Date();
-
-        checkClient(client, flat);
-    })
-)
+            checkClient(client, flat);
+        });
+    }
+});
 
 dbConnection.onNewClient((clientUID, client) => {
-    clients[clientUID] = client;
-
-    console.log('new client', clientUID, JSON.stringify(client));
-    dbConnection.getLatestFlats().then(
-        flats => flats.forEach(
-            flat => checkClient(client, flat)
+    if (initialized) {
+        console.log('new client', clientUID, JSON.stringify(client));
+        dbConnection.getLatestFlats().then(
+            flats => flats.forEach(
+                flat => checkClient(client, flat)
+            )
         )
-    )
+    }
 });
 
 dbConnection.onRemovedClient((clientUID, client) => {
-    console.log('removed client', clientUID, JSON.stringify(client));
-    delete clients[clientUID];
+    if (initialized) {
+        console.log('removed client', clientUID, JSON.stringify(client));
+        delete clients[clientUID];
+    }
 });
 
 dbConnection.onClientChanged((clientUID, client) => {
-    clients[clientUID] = client;
+    if (initialized) {
+        clients[clientUID] = client;
 
-    console.log('client changed', clientUID, JSON.stringify(client));
-    dbConnection.getLatestFlats().then(
-        flats => flats.forEach(
-            flat => checkClient(client, flat)
-        )
-    )
+        console.log('client changed', clientUID, JSON.stringify(client));
+        dbConnection.getLatestFlats().then(
+            flats => flats.forEach(
+                flat => checkClient(client, flat)
+            )
+        );
+    }
+});
+
+dbConnection.getClients().then(clientsByUID => {
+    clients = clientsByUID;
+    initialized = true;
+    console.log('initialization finished.');
 });

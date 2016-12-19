@@ -130,6 +130,34 @@ class Database {
     updateClient(clientId, client) {
         return this.database.ref(`clients/${clientId}`).set(client);
     }
+
+    clientExists(clientId) {
+        return this.database.ref(`clients/${clientId}`).once('value').then(
+            snapshot => snapshot.exists()
+        )
+    }
+
+    subscribeChatToClient(chatId, clientId) {
+        return Promise.all([
+            this.database.ref(`clients/${clientId}/chats/${chatId}`).set(true),
+            this.database.ref(`chats/${chatId}/${clientId}`).set(true)
+        ]);
+    }
+
+    unsubscribeChatFromClient(chatId, clientId) {
+        return Promise.all([
+            this.database.ref(`clients/${clientId}/chats/${chatId}`).set(false),
+            this.database.ref(`chats/${chatId}/${clientId}`).set(false)
+        ]);
+    }
+
+    getSubscriptionsForChat(chatId) {
+        return this.database.ref(`chats/${chatId}`)
+            .orderByValue()
+            .equalTo(true)
+            .once('value')
+            .then(snapshot => snapshot.val());
+    }
 }
 
 module.exports = Database;
