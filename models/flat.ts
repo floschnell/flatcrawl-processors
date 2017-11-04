@@ -4,7 +4,16 @@
  * 
  * @class Flat
  */
-class Flat {
+export class Flat {
+    public source: string;
+    public externalid: string;
+    public title: string;
+    public address: string;
+    public rent: number;
+    public squaremeters: number;
+    public rooms: number;
+    public date: number;
+
     constructor ({source, externalid, title, address, rent, squaremeters, rooms, date}) {
         this.source = source;
         this.externalid = externalid;
@@ -16,11 +25,9 @@ class Flat {
         this.date = date;
     }
 
-    getInternalId() {
+    public get internalId() {
         const externalId = this.externalid.split('.').join('_');
         
         return `${this.source}-${externalId}`;
     }
 }
-
-module.exports = Flat;

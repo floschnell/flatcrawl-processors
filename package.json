@@ -4,14 +4,25 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
-    "firebase": "^3.6.1",
-    "jsdom": "^9.8.3"
+    "@google/maps": "^0.4.5",
+    "@types/node": "^8.0.47",
+    "eslint": "^4.10.0",
+    "eslint-config-google": "^0.9.1",
+    "firebase": "^3.9.0",
+    "https": "^1.0.0",
+    "jsdom": "^11.3.0",
+    "rxjs": "^5.5.2",
+    "telegraf": "^3.15.3",
+    "tslint": "^5.8.0",
+    "tslint-config-prettier": "^1.6.0",
+    "typescript": "^2.6.1"
   },
-  "devDependencies": {
-    "@google/maps": "^0.3.1",
-    "telegraf": "^3.6.1"
+  "devDependencies": {},
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start:crawler": "node ./dist/crawl.js",
+    "start:client": "node ./dist/processors/telegram.js"
   },
-  "scripts": {},
   "author": "Florian Schnell",
   "license": "ISC",
   "es6": "true"
