@@ -19,6 +19,9 @@ var EventType;
     EventType[EventType["REMOVED"] = 2] = "REMOVED";
 })(EventType || (EventType = {}));
 class Database {
+    static isKeyValid(text) {
+        return (typeof text === 'string' && text.length && !text.match(/[.$\[\]#\/]/));
+    }
     constructor() {
         const config = {
             apiKey: 'AIzaSyAHzVDvfCVCuvyeRikignKT2cvKo9iBtYg',
@@ -138,12 +141,12 @@ class Database {
             const searchRef = this.database.ref(`searches/${searchId}`);
             const searchSnapshot = yield searchRef.once('value');
             if (searchSnapshot.exists()) {
-                console.log('search already exists!');
+                console.log('search', searchId, 'already exists!');
                 return false;
             }
             else {
                 try {
-                    yield searchRef.set(search);
+                    yield searchRef.set(search.toDb());
                     return true;
                 }
                 catch (e) {

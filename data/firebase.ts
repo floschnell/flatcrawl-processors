@@ -178,7 +178,7 @@ export class Database {
       return false;
     } else {
       try {
-        await searchRef.set(search);
+        await searchRef.set(search.toDb());
         return true;
       } catch (e) {
         console.log('search could not be set because:', e);
