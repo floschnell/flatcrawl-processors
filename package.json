@@ -1,23 +1,24 @@
 {
   "name": "flatcrawl",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description":
+    "Flatcrawl makes it easy to search for flats! It collects flats from different rental sites and exposes them in a consistent shape. Furthermore it lets you define custom searches through a Telegram bot that sends instant messages on new matches.",
   "dependencies": {
     "@google/maps": "^0.4.5",
-    "@types/node": "^8.0.47",
-    "eslint": "^4.10.0",
-    "eslint-config-google": "^0.9.1",
     "firebase": "^3.9.0",
     "https": "^1.0.0",
     "jsdom": "^11.3.0",
     "rxjs": "^5.5.2",
-    "telegraf": "^3.15.3",
+    "telegraf": "^3.15.3"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.47",
+    "eslint": "^4.10.0",
+    "eslint-config-google": "^0.9.1",
     "tslint": "^5.8.0",
     "tslint-config-prettier": "^1.6.0",
     "typescript": "^2.6.1"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start:crawler": "node ./dist/crawl.js",
@@ -29,6 +30,5 @@
       "ssh root@floschnell.de \"docker pull floschnell/flatcrawl:latest; docker stop flatcrawl; docker rm flatcrawl; docker run -dit --restart unless-stopped --name flatcrawl floschnell/flatcrawl:latest\""
   },
   "author": "Florian Schnell",
-  "license": "ISC",
-  "es6": "true"
+  "license": "ISC"
 }

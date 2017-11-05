@@ -14,6 +14,8 @@ import {
 } from '../services/directions';
 import { evaluateFlat } from '../services/evaluation';
 
+import { BOT_ID } from '../config';
+
 const dbConnection = new Database();
 const telegraf = new Telegraf('***REMOVED***');
 const telegram = new Telegram('***REMOVED***');
@@ -67,7 +69,7 @@ const question = (ctx, forceReply = true) => ({
   reply_to_message_id: ctx.message.message_id
 });
 
-telegraf.command(['search', 'search@FlatcrawlBot'], async ctx => {
+telegraf.command(['search', `search@${BOT_ID}`], async ctx => {
   console.log('received command');
 
   ctx.session.intent = 'create';
@@ -103,7 +105,7 @@ telegraf.command(['search', 'search@FlatcrawlBot'], async ctx => {
   );
 });
 
-telegraf.command(['subscribe', 'subscribe@FlatcrawlBot'], async ctx => {
+telegraf.command(['subscribe', `subscribe@${BOT_ID}`], async ctx => {
   const chat = ctx.chat;
   const params = ctx.message.text.split(' ');
 
@@ -129,7 +131,7 @@ telegraf.command(['subscribe', 'subscribe@FlatcrawlBot'], async ctx => {
   }
 });
 
-telegraf.command(['unsubscribe', 'unsubscribe@FlatcrawlBot'], ctx => {
+telegraf.command(['unsubscribe', `unsubscribe@${BOT_ID}`], ctx => {
   const chat = ctx.chat;
   const params = ctx.message.text.split(' ');
 
@@ -155,7 +157,7 @@ telegraf.command(['unsubscribe', 'unsubscribe@FlatcrawlBot'], ctx => {
   }
 });
 
-telegraf.command(['subscriptions', 'subscriptions@FlatcrawlBot'], ctx => {
+telegraf.command(['subscriptions', `subscriptions@${BOT_ID}`], ctx => {
   dbConnection.getSubscriptionsForChat(ctx.chat.id).then(subscriptions => {
     if (subscriptions) {
       const subscriptionKeys = Object.keys(subscriptions)
