@@ -8,4 +8,3 @@ class Location {
     }
 }
 exports.Location = Location;
-//# sourceMappingURL=location.js.map

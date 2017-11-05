@@ -15,9 +15,14 @@ import {
 import { evaluateFlat } from '../services/evaluation';
 
 const dbConnection = new Database();
-
 const telegraf = new Telegraf('***REMOVED***');
 const telegram = new Telegram('***REMOVED***');
+
+interface IDirection {
+  targetName: string;
+  transport: string;
+  leg: ILeg;
+}
 
 function mentionSender(ctx) {
   return `[${ctx.from.first_name}](tg://user?id=${ctx.from.id})`;
@@ -48,7 +53,10 @@ const supportedTransportModes = [
   }
 ];
 
+const runningSince: Date = new Date();
 let lastCheck: Date = null;
+let flatsChecked: number = 0;
+let searchesCreated: number = 0;
 let initialized = false;
 const searches: Map<string, Search> = new Map();
 
@@ -74,20 +82,20 @@ telegraf.command(['search', 'search@FlatcrawlBot'], async ctx => {
     ctx.chat.id,
     'Ok, so you are looking for a new flat?'
   );
-  await pause(1000);
+  await pause(500);
   await telegram.sendMessage(
     ctx.chat.id,
     'First, I will collect some search criteria.'
   );
-  await pause(1000);
+  await pause(500);
   await telegram.sendMessage(
     ctx.chat.id,
     'I need you to specify the criteria in the format "[min]-[max]". You can leave out either min or max for no limit.'
   );
-  await pause(1000);
+  await pause(500);
   await telegram.sendMessage(
     ctx.chat.id,
-    `How many Euro would you like to spent per month ${mentionSender(ctx)}?`,
+    `How many Euro would you like to spend per month ${mentionSender(ctx)}?`,
     {
       parse_mode: 'markdown',
       reply_markup: { force_reply: true, selective: true }
@@ -95,32 +103,40 @@ telegraf.command(['search', 'search@FlatcrawlBot'], async ctx => {
   );
 });
 
-telegraf.command(['subscribe'], async ctx => {
+telegraf.command(['subscribe', 'subscribe@FlatcrawlBot'], async ctx => {
   const chat = ctx.chat;
-  const searchName = ctx.message.text.replace('/subscribe', '').trim();
-  const searchId = ctx.from.id + '-' + searchName;
-  const searchExists = await dbConnection.searchExists(searchId);
+  const params = ctx.message.text.split(' ');
 
-  try {
-    if (searchExists) {
-      await dbConnection.subscribeChatToSearch(chat.id, searchId);
+  if (params.length > 1) {
+    const searchName = params[1];
+    const searchId = ctx.from.id + '-' + searchName;
+    const searchExists = await dbConnection.searchExists(searchId);
 
-      return ctx.reply(`I will update you within this chat!`);
-    } else {
-      return ctx.reply(`I do not know this search ID.`);
+    try {
+      if (searchExists) {
+        await dbConnection.subscribeChatToSearch(chat.id, searchId);
+
+        return ctx.reply(`I will update you within this chat!`);
+      } else {
+        return ctx.reply(`I do not know this search ID.`);
+      }
+    } catch (e) {
+      console.error('An error occured while subscribing to a search:', e);
+      return ctx.reply(`I am confused. Please try again later.`);
     }
-  } catch (e) {
-    console.error('An error occured while subscribing to a search:', e);
-    return ctx.reply(`I am confused. Please try again later.`);
+  } else {
+    ctx.reply(`Please provide me the search ID that you want to subscribe to.`);
   }
 });
 
-telegraf.command(['unsubscribe'], ctx => {
+telegraf.command(['unsubscribe', 'unsubscribe@FlatcrawlBot'], ctx => {
   const chat = ctx.chat;
-  const searchName = ctx.message.text.replace('/unsubscribe', '').trim();
-  const searchId = ctx.from.id + '-' + searchName;
+  const params = ctx.message.text.split(' ');
 
-  if (searchId.length > 0) {
+  if (params.length > 1) {
+    const searchName = params[1];
+    const searchId = ctx.from.id + '-' + searchName;
+
     dbConnection.searchExists(searchId).then(exists => {
       if (exists) {
         dbConnection.unsubscribeChatFromSearch(chat.id, searchId).then(() => {
@@ -139,17 +155,7 @@ telegraf.command(['unsubscribe'], ctx => {
   }
 });
 
-telegraf.command(['status'], ctx => {
-  if (lastCheck) {
-    ctx.reply(
-      `Yup, I'm here. I checked the last flat on ${lastCheck.toLocaleString()}`
-    );
-  } else {
-    ctx.reply(`Yup, I'm here. Haven't found any flats yet ...`);
-  }
-});
-
-telegraf.command(['subscriptions'], ctx => {
+telegraf.command(['subscriptions', 'subscriptions@FlatcrawlBot'], ctx => {
   dbConnection.getSubscriptionsForChat(ctx.chat.id).then(subscriptions => {
     if (subscriptions) {
       const subscriptionKeys = Object.keys(subscriptions)
@@ -165,6 +171,31 @@ telegraf.command(['subscriptions'], ctx => {
       return ctx.reply(`I am currently not sending you updates in this chat.`);
     }
   });
+});
+
+telegraf.command(['status'], async ctx => {
+  await telegram.sendMessage(
+    ctx.chat.id,
+    `Yup, I'm here since ${runningSince.toLocaleString()}.`
+  );
+
+  if (lastCheck) {
+    await telegram.sendMessage(
+      ctx.chat.id,
+      `I have checked the last flat on ${lastCheck.toLocaleString()}.`
+    );
+
+    await telegram.sendMessage(
+      ctx.chat.id,
+      `I have *checked ${flatsChecked} flats* and *created ${searchesCreated} searches* since I have been called to life.`,
+      { parse_mode: 'markdown' }
+    );
+  } else {
+    await telegram.sendMessage(
+      ctx.chat.id,
+      `Haven't checked any flats so far.`
+    );
+  }
 });
 
 telegraf.on('text', async ctx => {
@@ -205,6 +236,7 @@ telegraf.on('text', async ctx => {
           msg.push(`You specified a maximum of ${limits[2]}.`);
           limit.max = parseInt(limits[2], 10);
         }
+        ctx.session.search.limits.set(limitName, limit);
 
         // thank you, you specified a minimum of ... and a maximum of ...
         await telegram.sendMessage(ctx.chat.id, msg.join('\n'), {
@@ -213,7 +245,6 @@ telegraf.on('text', async ctx => {
 
         await pause(1000);
 
-        ctx.session.search.limits[limitName] = limit;
         if (limitName === 'rent') {
           ctx.session.step = 'limit:squaremeters';
 
@@ -248,14 +279,14 @@ telegraf.on('text', async ctx => {
             'Alright, filters are set up ...'
           );
 
-          await pause(1000);
+          await pause(500);
 
           await telegram.sendMessage(
             ctx.chat.id,
             'With every new flat that I find, I can also show you the distances to your most important locations.'
           );
 
-          await pause(1000);
+          await pause(500);
 
           await telegram.sendMessage(
             ctx.chat.id,
@@ -276,45 +307,7 @@ telegraf.on('text', async ctx => {
     } else if (stepName === 'locations') {
       const substep = step[1];
 
-      if (substep === 'continue') {
-        const response = ctx.message.text.trim().toLowerCase();
-
-        if (response === 'yes') {
-          ctx.session.step = 'locations:add';
-
-          await telegram.sendMessage(
-            ctx.chat.id,
-            `Ok, ${mentionSender(
-              ctx
-            )}, please send me the address of the location.`,
-            {
-              parse_mode: 'markdown',
-              reply_markup: { force_reply: true, selective: true }
-            }
-          );
-        } else if (response === 'no') {
-          ctx.session.step = 'finishing';
-          ctx.reply(
-            'Almost done. Your search will need a name (one word). The name will be used to reference this search from further commands.'
-          );
-          ctx.reply('What name would you like?', question(ctx));
-        } else {
-          await telegram.sendMessage(
-            ctx.chat.id,
-            `Sorry ${mentionSender(ctx)}, I did not understand. Yes or no?`,
-            {
-              parse_mode: 'markdown',
-              reply_markup: {
-                keyboard: [['yes', 'no']],
-                one_time_keyboard: true,
-                resize_keyboard: true,
-                selective: true
-              },
-              reply_to_message_id: ctx.message.message_id
-            }
-          );
-        }
-      } else if (substep === 'add') {
+      if (substep === 'add') {
         const location = await getCoordsForAddress(ctx.message.text.trim());
         ctx.session.step = 'locations:confirm';
         ctx.session.location = {
@@ -462,34 +455,84 @@ telegraf.on('text', async ctx => {
             }
           );
         }
-      }
-    } else if (stepName === 'finishing') {
-      const searchName = ctx.message.text.trim().toLowerCase();
-      if (searchName.indexOf(' ') < 0 && Database.isKeyValid(searchName)) {
-        const searchId = ctx.session.search.user.id + '-' + searchName;
-        ctx.session.search.name = searchName;
+      } else if (substep === 'continue') {
+        const response = ctx.message.text.trim().toLowerCase();
 
-        const result = await dbConnection.saveSearch(
-          searchId,
-          ctx.session.search
-        );
-        if (result) {
-          ctx.reply(
-            `Your search has been set up. If you want to receive updates, use "/subscribe ${searchName}" in the chat of your choice.`
+        if (response === 'yes') {
+          ctx.session.step = 'locations:add';
+
+          await telegram.sendMessage(
+            ctx.chat.id,
+            `Ok, ${mentionSender(
+              ctx
+            )}, please send me the address of the location.`,
+            {
+              parse_mode: 'markdown',
+              reply_markup: { force_reply: true, selective: true }
+            }
           );
+        } else if (response === 'no') {
+          // we are done!
           ctx.session.intent = null;
           ctx.session.step = null;
+
+          const id = await dbConnection.saveSearch(ctx.session.search);
+
+          if (id >= 0) {
+            await telegram.sendMessage(
+              ctx.chat.id,
+              `I successfully saved your search with the id *${id}*.`,
+              {
+                parse_mode: 'markdown',
+                reply_markup: {
+                  remove_keyboard: true
+                }
+              }
+            );
+
+            await pause(500);
+
+            await telegram.sendMessage(
+              ctx.chat.id,
+              `You can now subscribe from any chat to this search.`
+            );
+
+            await pause(500);
+
+            await telegram.sendMessage(
+              ctx.chat.id,
+              `Go to the chat of your choice and *add me to the conversation*. Then use the command \`/subscribe ${id}\` to receive messages as new flats become available.`,
+              {
+                parse_mode: 'markdown'
+              }
+            );
+          } else {
+            await telegram.sendMessage(
+              ctx.chat.id,
+              `Oh no, I messed up your search. Please try again later ...`,
+              {
+                reply_markup: {
+                  remove_keyboard: true
+                }
+              }
+            );
+          }
         } else {
-          ctx.reply(
-            `You have already created a search with the name "${searchName}".`
+          await telegram.sendMessage(
+            ctx.chat.id,
+            `Sorry ${mentionSender(ctx)}, I did not understand. Yes or no?`,
+            {
+              parse_mode: 'markdown',
+              reply_markup: {
+                keyboard: [['yes', 'no']],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+                selective: true
+              },
+              reply_to_message_id: ctx.message.message_id
+            }
           );
-          ctx.reply('What name would you like to use instead?', question(ctx));
         }
-      } else {
-        ctx.reply(
-          `The search name "${searchName}" is invalid. Make sure it does not contain spaces.`
-        );
-        ctx.reply('What name would you like to use instead?', question(ctx));
       }
     }
   }
@@ -497,59 +540,75 @@ telegraf.on('text', async ctx => {
 
 telegraf.startPolling();
 
-function calculateDirections(search: Search, flat: Flat): Promise<ILeg[]> {
+function calculateDirections(
+  search: Search,
+  flat: Flat
+): Promise<IDirection[]> {
   return getCoordsForAddress(flat.address).then(flatGeo =>
     Promise.all(
-      search.locations.map(location =>
-        getDirections(location.geo, flatGeo, location.transport)
+      search.locations.map(
+        async location =>
+          ({
+            leg: await getDirections(location.geo, flatGeo, location.transport),
+            targetName: location.name,
+            transport: location.transport
+          } as IDirection)
       )
     )
   );
 }
 
-function sendFlatToChat(flat: Flat, directions: ILeg[], chatId: number) {
+async function sendFlatToChat(
+  flat: Flat,
+  directions: IDirection[],
+  chatId: number
+): Promise<void> {
   const message = [];
   let url = '';
+  const chat = await telegram.getChat(chatId);
+  const salution = chat.first_name ? chat.first_name : 'guys';
 
   console.log('sending message to chat', chatId);
-  telegram
-    .getChat(chatId)
-    .then(chat => {
-      const salution = chat.first_name ? chat.first_name : 'guys';
 
-      if (flat.source === 'immoscout') {
-        url = `http://www.immobilienscout24.de/expose/${flat.externalid}`;
-      } else if (flat.source === 'immowelt') {
-        url = `https://www.immowelt.de/expose/${flat.externalid}`;
-      } else if (flat.source === 'wggesucht') {
-        url = `https://www.wg-gesucht.de/${flat.externalid}`;
-      }
+  if (flat.source === 'immoscout') {
+    url = `http://www.immobilienscout24.de/expose/${flat.externalid}`;
+  } else if (flat.source === 'immowelt') {
+    url = `https://www.immowelt.de/expose/${flat.externalid}`;
+  } else if (flat.source === 'wggesucht') {
+    url = `https://www.wg-gesucht.de/${flat.externalid}`;
+  }
 
-      message.push(`Hey ${salution}, found a new flat!`);
-      message.push(`[${flat.title}](${url})`);
-      message.push(
-        `The flat costs *${flat.rent}€* rent. It has *${flat.rooms} rooms* and *${flat.squaremeters} sqm*.`
-      );
+  message.push(`Hey ${salution}, found a new flat!`);
+  message.push(`[${flat.title}](${url})`);
+  message.push(
+    `The flat costs *${flat.rent}€* rent. It has *${flat.rooms} rooms* and *${flat.squaremeters} sqm*.`
+  );
 
-      directions.forEach(direction => {
-        message.push(
-          `From this flat to *${direction.end_address}* will take you *${direction
-            .duration.text}* (${direction.distance.text}) by ${direction
-            .steps[0].travel_mode}`
-        );
-      });
+  directions.forEach(direction => {
+    message.push(
+      `From this flat to *${direction.targetName}* will take you *${direction
+        .leg.duration.text}* (${direction.leg.distance
+        .text}) by ${direction.transport}.`
+    );
+  });
 
-      telegram.sendMessage(chat.id, message.join('\n'), {
-        parse_mode: 'Markdown'
-      });
-    })
-    .catch(e => {
-      console.error(e);
-    });
+  telegram.sendMessage(chat.id, message.join('\n'), {
+    parse_mode: 'Markdown'
+  });
 }
 
 async function checkSearch(search: Search, flat) {
-  if (search.chats && evaluateFlat(search, flat)) {
+  const hasActiveChats = (inSearch: Search): boolean => {
+    let hasActive = false;
+    inSearch.chats.forEach(active => {
+      if (active) {
+        hasActive = true;
+      }
+    });
+    return hasActive;
+  };
+
+  if (hasActiveChats(search) && evaluateFlat(search, flat)) {
     console.log(
       'found relevant flat for search',
       search.user.id,
@@ -560,9 +619,13 @@ async function checkSearch(search: Search, flat) {
     console.log('done.');
 
     console.log('sending info message to chats now!');
-    search.chats.forEach((enabled, chatId) => {
+    search.chats.forEach(async (enabled, chatId) => {
       if (enabled) {
-        sendFlatToChat(flat, directions, chatId);
+        try {
+          await sendFlatToChat(flat, directions, chatId);
+        } catch (e) {
+          console.error('could not send flat to chat, because:', e);
+        }
       }
     });
   }
@@ -571,6 +634,7 @@ async function checkSearch(search: Search, flat) {
 
 dbConnection.onFlatAdded.subscribe(event => {
   if (initialized) {
+    flatsChecked++;
     searches.forEach(search => {
       checkSearch(search, event.flat);
     });
@@ -579,6 +643,7 @@ dbConnection.onFlatAdded.subscribe(event => {
 
 dbConnection.onSearchAdded.subscribe(event => {
   if (initialized) {
+    searchesCreated++;
     console.log('new search', event.searchUid, JSON.stringify(event.search));
     dbConnection
       .getLatestFlats()

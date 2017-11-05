@@ -32,8 +32,9 @@ class Database {
         this.searchChangedObserver = rxjs_1.Observable.create(observer => {
             const searchesRef = this.database.ref('searches');
             searchesRef.on('child_changed', snapshot => {
+                const search = new search_1.Search(snapshot.val());
                 const event = {
-                    search: snapshot.val(),
+                    search,
                     searchUid: snapshot.key,
                     type: EventType.CHANGED
                 };
@@ -46,8 +47,9 @@ class Database {
         this.searchAddedObserver = rxjs_1.Observable.create(observer => {
             const searchesRef = this.database.ref('searches');
             searchesRef.on('child_added', snapshot => {
+                const search = new search_1.Search(snapshot.val());
                 const event = {
-                    search: snapshot.val(),
+                    search,
                     searchUid: snapshot.key,
                     type: EventType.ADDED
                 };
@@ -60,8 +62,9 @@ class Database {
         this.searchRemovedObserver = rxjs_1.Observable.create(observer => {
             const searchesRef = this.database.ref('searches');
             searchesRef.on('child_removed', snapshot => {
+                const search = new search_1.Search(snapshot.val());
                 const event = {
-                    search: snapshot.val(),
+                    search,
                     searchUid: snapshot.key,
                     type: EventType.REMOVED
                 };
@@ -117,8 +120,7 @@ class Database {
             const searchesRef = this.database.ref('searches');
             searchesRef.once('value', snapshot => {
                 const searchesById = snapshot.val() || {};
-                Object.keys(searchesById).map(id => new search_1.Search(searchesById[id]));
-                resolve(searchesById);
+                resolve(Object.keys(searchesById).map(id => new search_1.Search(searchesById[id])));
             });
         });
     }
@@ -136,23 +138,25 @@ class Database {
             resolve(flats.map(flat => new flat_1.Flat(flat)));
         }));
     }
-    saveSearch(searchId, search) {
+    saveSearch(search) {
         return __awaiter(this, void 0, void 0, function* () {
-            const searchRef = this.database.ref(`searches/${searchId}`);
-            const searchSnapshot = yield searchRef.once('value');
-            if (searchSnapshot.exists()) {
-                console.log('search', searchId, 'already exists!');
-                return false;
-            }
-            else {
-                try {
+            try {
+                const nextSearchId = yield this.getNewUserSearchId(search.user.id);
+                const searchId = `${search.user.id}-${nextSearchId}`;
+                const searchRef = this.database.ref(`searches/${searchId}`);
+                const searchSnapshot = yield searchRef.once('value');
+                if (searchSnapshot.exists()) {
+                    console.log('search', searchId, 'already exists!');
+                    return -1;
+                }
+                else {
                     yield searchRef.set(search.toDb());
-                    return true;
+                    return nextSearchId;
                 }
-                catch (e) {
-                    console.log('search could not be set because:', e);
-                    return false;
-                }
+            }
+            catch (e) {
+                console.log('search could not be created because:', e);
+                return -1;
             }
         });
     }
@@ -198,6 +202,34 @@ class Database {
             .once('value')
             .then(snapshot => snapshot.val());
     }
+    getNewUserSearchId(userId) {
+        const userRef = this.database.ref(`users/${userId}`);
+        return new Promise((resolve, reject) => {
+            userRef.transaction(current => {
+                if (current === null) {
+                    return {
+                        searchCount: 1
+                    };
+                }
+                else {
+                    Object.assign(current, {
+                        searchCount: current.searchCount + 1
+                    });
+                    return current;
+                }
+            }, (error, hasSucceeded, snapshot) => {
+                if (error) {
+                    reject(error);
+                }
+                else if (hasSucceeded) {
+                    const user = snapshot.val();
+                    resolve(user.searchCount);
+                }
+                else {
+                    reject(new Error('uknown error!'));
+                }
+            });
+        });
+    }
 }
 exports.Database = Database;
-//# sourceMappingURL=firebase.js.map

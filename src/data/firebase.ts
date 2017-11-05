@@ -50,8 +50,9 @@ export class Database {
     this.searchChangedObserver = Observable.create(observer => {
       const searchesRef = this.database.ref('searches');
       searchesRef.on('child_changed', snapshot => {
+        const search = new Search(snapshot.val());
         const event = {
-          search: snapshot.val(),
+          search,
           searchUid: snapshot.key,
           type: EventType.CHANGED
         } as ISearchEvent;
@@ -65,8 +66,9 @@ export class Database {
     this.searchAddedObserver = Observable.create(observer => {
       const searchesRef = this.database.ref('searches');
       searchesRef.on('child_added', snapshot => {
+        const search = new Search(snapshot.val());
         const event = {
-          search: snapshot.val(),
+          search,
           searchUid: snapshot.key,
           type: EventType.ADDED
         } as ISearchEvent;
@@ -80,8 +82,9 @@ export class Database {
     this.searchRemovedObserver = Observable.create(observer => {
       const searchesRef = this.database.ref('searches');
       searchesRef.on('child_removed', snapshot => {
+        const search = new Search(snapshot.val());
         const event = {
-          search: snapshot.val(),
+          search,
           searchUid: snapshot.key,
           type: EventType.REMOVED
         } as ISearchEvent;
@@ -147,8 +150,9 @@ export class Database {
       searchesRef.once('value', snapshot => {
         const searchesById = snapshot.val() || {};
 
-        Object.keys(searchesById).map(id => new Search(searchesById[id]));
-        resolve(searchesById);
+        resolve(
+          Object.keys(searchesById).map(id => new Search(searchesById[id]))
+        );
       });
     });
   }
@@ -170,20 +174,22 @@ export class Database {
     );
   }
 
-  public async saveSearch(searchId: string, search: Search): Promise<boolean> {
-    const searchRef = this.database.ref(`searches/${searchId}`);
-    const searchSnapshot = await searchRef.once('value');
-    if (searchSnapshot.exists()) {
-      console.log('search', searchId, 'already exists!');
-      return false;
-    } else {
-      try {
+  public async saveSearch(search: Search): Promise<number> {
+    try {
+      const nextSearchId = await this.getNewUserSearchId(search.user.id);
+      const searchId = `${search.user.id}-${nextSearchId}`;
+      const searchRef = this.database.ref(`searches/${searchId}`);
+      const searchSnapshot = await searchRef.once('value');
+      if (searchSnapshot.exists()) {
+        console.log('search', searchId, 'already exists!');
+        return -1;
+      } else {
         await searchRef.set(search.toDb());
-        return true;
-      } catch (e) {
-        console.log('search could not be set because:', e);
-        return false;
+        return nextSearchId;
       }
+    } catch (e) {
+      console.log('search could not be created because:', e);
+      return -1;
     }
   }
 
@@ -234,5 +240,35 @@ export class Database {
       .equalTo(true)
       .once('value')
       .then(snapshot => snapshot.val());
+  }
+
+  private getNewUserSearchId(userId: number): Promise<number> {
+    const userRef = this.database.ref(`users/${userId}`);
+    return new Promise((resolve, reject) => {
+      userRef.transaction(
+        current => {
+          if (current === null) {
+            return {
+              searchCount: 1
+            };
+          } else {
+            Object.assign(current, {
+              searchCount: current.searchCount + 1
+            });
+            return current;
+          }
+        },
+        (error, hasSucceeded, snapshot) => {
+          if (error) {
+            reject(error);
+          } else if (hasSucceeded) {
+            const user = snapshot.val();
+            resolve(user.searchCount);
+          } else {
+            reject(new Error('uknown error!'));
+          }
+        }
+      );
+    });
   }
 }

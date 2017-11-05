@@ -40,4 +40,3 @@ function getDirections(origin, destination, mode) {
     });
 }
 exports.getDirections = getDirections;
-//# sourceMappingURL=directions.js.map

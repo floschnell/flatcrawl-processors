@@ -10,4 +10,3 @@ function mapToObject(map) {
     return obj;
 }
 exports.mapToObject = mapToObject;
-//# sourceMappingURL=utils.js.map

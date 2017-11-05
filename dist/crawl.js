@@ -51,4 +51,3 @@ function run() {
 run();
 // after that run all 5 minutes ...
 setInterval(run, 5 * 60 * 1000);
-//# sourceMappingURL=crawl.js.map

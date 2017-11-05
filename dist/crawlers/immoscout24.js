@@ -43,4 +43,3 @@ class ImmoScout24Crawler extends crawler_js_1.Crawler {
     }
 }
 exports.ImmoScout24Crawler = ImmoScout24Crawler;
-//# sourceMappingURL=immoscout24.js.map

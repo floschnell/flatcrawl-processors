@@ -47,4 +47,3 @@ class ImmoWeltCrawler extends crawler_js_1.Crawler {
     }
 }
 exports.ImmoWeltCrawler = ImmoWeltCrawler;
-//# sourceMappingURL=immowelt.js.map

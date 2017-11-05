@@ -12,7 +12,6 @@ export interface ILimit {
 }
 
 export class Search {
-  public name: string;
   public user: IUser;
   public locations: Location[];
   public limits: Map<string, ILimit>;
@@ -42,7 +41,6 @@ export class Search {
       chats: mapToObject(this.chats),
       limits: mapToObject(this.limits),
       locations: this.locations,
-      name: this.name,
       user: this.user
     };
   }

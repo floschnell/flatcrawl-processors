@@ -23,10 +23,8 @@ class Search {
             chats: utils_1.mapToObject(this.chats),
             limits: utils_1.mapToObject(this.limits),
             locations: this.locations,
-            name: this.name,
             user: this.user
         };
     }
 }
 exports.Search = Search;
-//# sourceMappingURL=search.js.map

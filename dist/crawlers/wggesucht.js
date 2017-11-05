@@ -54,4 +54,3 @@ class WGGesuchtCrawler extends crawler_js_1.Crawler {
     }
 }
 exports.WGGesuchtCrawler = WGGesuchtCrawler;
-//# sourceMappingURL=wggesucht.js.map

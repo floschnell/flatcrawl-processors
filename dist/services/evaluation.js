@@ -6,24 +6,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @return boolean Whether the flat satisfies the client's wishes.
  */
 function evaluateFlat(search, flat) {
-    return Object.keys(search.limits)
-        .map(attribute => {
-        const limit = search.limits[attribute];
+    let satisfied = true;
+    search.limits.forEach((limit, attribute) => {
         const value = parseInt(flat[attribute], 10);
-        if (limit.min !== undefined && value < parseInt(limit.min, 10)) {
-            console.log(value, 'has been smaller than', limit.min);
-            return false;
+        if (limit.min !== undefined && value < limit.min) {
+            console.log(attribute, 'not satisfied:', value, 'has been smaller than', limit.min);
+            satisfied = false;
         }
-        else if (limit.max !== undefined && value > parseInt(limit.max, 10)) {
-            console.log(value, 'has been bigger than', limit.max);
-            return false;
+        else if (limit.max !== undefined && value > limit.max) {
+            console.log(attribute, 'not satisfied:', value, 'has been bigger than', limit.max);
+            satisfied = false;
         }
         else {
-            console.log(value, 'is bigger than', limit.min, 'and smaller than', limit.max);
-            return true;
+            console.log(attribute, 'satisfied:', value, 'is bigger than', limit.min, 'and smaller than', limit.max);
         }
-    })
-        .every(result => result);
+    });
+    return satisfied;
 }
 exports.evaluateFlat = evaluateFlat;
-//# sourceMappingURL=evaluation.js.map

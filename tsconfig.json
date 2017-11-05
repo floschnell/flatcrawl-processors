@@ -3,7 +3,8 @@
     "module": "commonjs",
     "target": "es2016",
     "outDir": "dist",
-    "types": ["node"],
-    "sourceMap": true
-  }
+    "types": ["node"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }

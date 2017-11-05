@@ -22,4 +22,3 @@ class Flat {
     }
 }
 exports.Flat = Flat;
-//# sourceMappingURL=flat.js.map
