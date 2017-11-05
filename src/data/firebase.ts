@@ -4,6 +4,8 @@ import { Search } from '../models/search';
 
 import { Observable } from 'rxjs';
 
+import { API_KEY, DATABASE_URL } from '../config';
+
 enum EventType {
   ADDED,
   CHANGED,
@@ -41,8 +43,8 @@ export class Database {
 
   constructor() {
     const config = {
-      apiKey: 'AIzaSyAHzVDvfCVCuvyeRikignKT2cvKo9iBtYg',
-      databaseURL: 'https://flatcrawl-d2d97.firebaseio.com'
+      apiKey: API_KEY,
+      databaseURL: DATABASE_URL
     };
     const app = firebase.initializeApp(config);
     this.database = app.database();
