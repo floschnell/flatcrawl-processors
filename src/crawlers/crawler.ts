@@ -21,9 +21,18 @@ export abstract class Crawler {
   }
 
   public async run() {
-    const document = await this.getHtml();
-    const flats = await this.getLatestFlats(document);
-    return flats;
+    try {
+      const document = await this.getHtml();
+      const flats = await this.getLatestFlats(document);
+      return flats;
+    } catch (e) {
+      console.error(
+        `There was an exception while executing the "${this.name}" crawler:`,
+        e
+      );
+      console.log('Will return empty list of results.');
+      return [];
+    }
   }
 
   /**

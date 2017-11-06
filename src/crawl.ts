@@ -28,49 +28,54 @@ const crawlers: Crawler[] = [
 ];
 const database = new Database();
 
-/**
- * Uses the given crawlers and looks for new flats.
- * 
- * @param {Array.<Crawler>} crawlers
- * @returns {<Array.<PromiseLike.<Flat>>} A promise of an array containing the flats.
- */
-function crawlFlats() {
+async function crawlFlats(): Promise<Flat[][]> {
   console.log('looking for flats ...');
 
-  const promisedFlats = crawlers.map(crawler => crawler.run());
+  const promisedFlats = await Promise.all(
+    crawlers.map(crawler => crawler.run())
+  );
 
   console.log('done.');
   return promisedFlats;
 }
 
-/**
- * Sends new flats to the database.
- * 
- * @param {Array.<Flat>} flats
- */
-function sendFlatsToDatabase(flats) {
+async function sendFlatsToDatabase(flats: Flat[]): Promise<void> {
   console.log('sending flats to database ...');
 
-  Promise.all(flats.map(flat => database.saveFlat(flat)))
-    .then(results =>
-      results.forEach(result => {
-        if (result !== null) {
-          console.log('Saved flat:', JSON.stringify(result));
-        }
-      })
-    )
-    .then(() => console.log('done.'));
+  const promisedSaves = flats.map(async flat => {
+    try {
+      const result = await database.saveFlat(flat);
+      if (result !== null) {
+        console.log('Saved new flat:', JSON.stringify(result));
+      }
+    } catch (e) {
+      console.error();
+    }
+  });
+  await Promise.all(promisedSaves);
+
+  console.log('done.');
 }
 
 /**
  * This will collect new flats and send them to the database.
  */
-function run() {
-  const arrayOfPromisedFlats = crawlFlats();
+async function run() {
+  try {
+    // crawl flats
+    const arrayOfFlats: Flat[][] = await crawlFlats();
 
-  Promise.all(arrayOfPromisedFlats).then(arrayOfFlats =>
-    arrayOfFlats.forEach(sendFlatsToDatabase)
-  );
+    // flatten array
+    const flats: Flat[] = arrayOfFlats.reduce(
+      (prev, current) => prev.concat(current),
+      new Array<Flat>()
+    );
+
+    // save results to database
+    await sendFlatsToDatabase(flats);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 // run on startup ...
