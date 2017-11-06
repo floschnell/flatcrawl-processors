@@ -33,7 +33,9 @@ export class Search {
       this.chats.set(parseInt(uid, 10), chats[uid]);
     });
 
-    this.user = user as IUser;
+    this.user = Object.assign({
+      name: null
+    }, user) as IUser;
   }
 
   public toDb(): any {
