@@ -580,7 +580,7 @@ async function sendFlatToChat(
     url = `https://www.wg-gesucht.de/${flat.externalid}`;
   }
 
-  message.push(`Hey ${salution}, found a new flat!`);
+  message.push(`Hey ${salution}, found *a new flat on ${flat.source}*!`);
   message.push(`[${flat.title}](${url})`);
   message.push(
     `The flat costs *${flat.rent}€* rent. It has *${flat.rooms} rooms* and *${flat.squaremeters} sqm*.`
