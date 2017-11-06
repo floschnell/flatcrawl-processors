@@ -14,11 +14,11 @@ import {
 } from '../services/directions';
 import { evaluateFlat } from '../services/evaluation';
 
-import { BOT_ID } from '../config';
+import { BOT_ID, BOT_TOKEN } from '../config';
 
 const dbConnection = new Database();
-const telegraf = new Telegraf('***REMOVED***');
-const telegram = new Telegram('***REMOVED***');
+const telegraf = new Telegraf(BOT_TOKEN);
+const telegram = new Telegram(BOT_TOKEN);
 
 interface IDirection {
   targetName: string;

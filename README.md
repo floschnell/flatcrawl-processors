@@ -15,6 +15,7 @@ If you want to run the whole infrastructure yourself, you will need to do the fo
 3) Create the `src/config.ts` file and fill it with the information you should have acquired from step 1 and 2:
 ```typescript
 export const BOT_ID = '...';
+export const BOT_TOKEN = '...:...';
 export const API_KEY = '...';
 export const DATABASE_URL = '...';
 ```
