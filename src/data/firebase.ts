@@ -136,13 +136,13 @@ export class Database {
   public saveFlat(flat: Flat): Promise<Flat> {
     const flatsRef = this.database.ref(`flats`);
 
-    return flatsRef.once('value').then<Flat>(snapshot => {
+    return flatsRef.once('value').then(snapshot => {
       if (!snapshot.exists() || !snapshot.hasChild(flat.internalId)) {
         this.database.ref(`flats/${flat.internalId}`).set(flat);
         return flat;
       }
       return null;
-    });
+    }) as Promise<Flat>;
   }
 
   public getSearches(): Promise<Map<string, Search>> {
@@ -210,8 +210,10 @@ export class Database {
       }) as Promise<Search>;
   }
 
-  public updateSearch(searchId, search): Promise<any> {
-    return this.database.ref(`searches/${searchId}`).set(search);
+  public updateSearch(searchId, search): Promise<void> {
+    return this.database.ref(`searches/${searchId}`).set(search) as Promise<
+      void
+    >;
   }
 
   public searchExists(searchId): Promise<boolean> {
@@ -243,7 +245,7 @@ export class Database {
       .orderByValue()
       .equalTo(true)
       .once('value')
-      .then(snapshot => snapshot.val());
+      .then(snapshot => snapshot.val()) as Promise<any>;
   }
 
   private getNewUserSearchId(userId: number): Promise<number> {
