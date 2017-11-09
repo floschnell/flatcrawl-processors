@@ -133,7 +133,7 @@ export class Database {
     return this.flatAddedObserver;
   }
 
-  public saveFlat(flat: Flat) {
+  public saveFlat(flat: Flat): Promise<Flat> {
     const flatsRef = this.database.ref(`flats`);
 
     return flatsRef.once('value').then(snapshot => {
@@ -145,16 +145,18 @@ export class Database {
     });
   }
 
-  public getSearches() {
+  public getSearches(): Promise<Map<string, Search>> {
     return new Promise(resolve => {
       const searchesRef = this.database.ref('searches');
 
       searchesRef.once('value', snapshot => {
         const searchesById = snapshot.val() || {};
-
-        resolve(
-          Object.keys(searchesById).map(id => new Search(searchesById[id]))
-        );
+        const mapOfSearches = new Map<string, Search>();
+        Object.keys(searchesById).map(id => {
+          const search = new Search(searchesById[id]);
+          mapOfSearches.set(id, search);
+        });
+        resolve(mapOfSearches);
       });
     });
   }
@@ -208,7 +210,7 @@ export class Database {
       }) as Promise<Search>;
   }
 
-  public updateSearch(searchId, search) {
+  public updateSearch(searchId, search): Promise<void> {
     return this.database.ref(`searches/${searchId}`).set(search);
   }
 
@@ -221,21 +223,21 @@ export class Database {
       ) as Promise<boolean>;
   }
 
-  public subscribeChatToSearch(chatId, searchId) {
+  public subscribeChatToSearch(chatId, searchId): Promise<void[]> {
     return Promise.all([
       this.database.ref(`searches/${searchId}/chats/${chatId}`).set(true),
       this.database.ref(`chats/${chatId}/${searchId}`).set(true)
     ]);
   }
 
-  public unsubscribeChatFromSearch(chatId, searchId) {
+  public unsubscribeChatFromSearch(chatId, searchId): Promise<void[]> {
     return Promise.all([
       this.database.ref(`searches/${searchId}/chats/${chatId}`).set(false),
       this.database.ref(`chats/${chatId}/${searchId}`).set(false)
     ]);
   }
 
-  public getSubscriptionsForChat(chatId) {
+  public getSubscriptionsForChat(chatId): Promise<any> {
     return this.database
       .ref(`chats/${chatId}`)
       .orderByValue()

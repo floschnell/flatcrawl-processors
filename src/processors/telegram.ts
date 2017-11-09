@@ -647,6 +647,7 @@ dbConnection.onSearchAdded.subscribe(event => {
   if (initialized) {
     searchesCreated++;
     console.log('new search', event.searchUid, JSON.stringify(event.search));
+    searches.set(event.searchUid, event.search);
     dbConnection
       .getLatestFlats()
       .then(flats => flats.forEach(flat => checkSearch(event.search, flat)));
@@ -672,16 +673,13 @@ dbConnection.onSearchChanged.subscribe(event => {
       JSON.stringify(event.search)
     );
     searches.set(event.searchUid, event.search);
-    dbConnection
-      .getLatestFlats()
-      .then(flats => flats.forEach(flat => checkSearch(event.search, flat)));
   }
 });
 
-dbConnection.getSearches().then(searchesById => {
+dbConnection.getSearches().then(searchesByUid => {
   searches.clear();
-  Object.keys(searchesById).forEach(uid => {
-    searches.set(uid, searchesById[uid]);
+  searchesByUid.forEach((value, key) => {
+    searches.set(key, value);
   });
   initialized = true;
   console.log('initialization finished.');
