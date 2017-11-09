@@ -136,7 +136,7 @@ export class Database {
   public saveFlat(flat: Flat): Promise<Flat> {
     const flatsRef = this.database.ref(`flats`);
 
-    return flatsRef.once('value').then(snapshot => {
+    return flatsRef.once('value').then<Flat>(snapshot => {
       if (!snapshot.exists() || !snapshot.hasChild(flat.internalId)) {
         this.database.ref(`flats/${flat.internalId}`).set(flat);
         return flat;
@@ -210,7 +210,7 @@ export class Database {
       }) as Promise<Search>;
   }
 
-  public updateSearch(searchId, search): Promise<void> {
+  public updateSearch(searchId, search): Promise<any> {
     return this.database.ref(`searches/${searchId}`).set(search);
   }
 
