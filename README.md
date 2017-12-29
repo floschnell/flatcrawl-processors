@@ -12,13 +12,23 @@ Of those **only the crawler and telegram client are under source control**. Howe
 If you want to run the whole infrastructure yourself, you will need to do the following things:
 1) Create a [Firebase account](https://firebase.google.com/) and setup an empty realtime database.
 2) [Create a Telegram bot via the BotFather](https://core.telegram.org/bots#creating-a-new-bot).
-3) Create the `src/config.ts` file and fill it with the information you should have acquired from step 1 and 2:
+3) Create a Google API Key for the Directions API
+4) Create the `src/config.ts` file and fill it with the information you should have acquired from step 1, 2 and 3:
 ```typescript
+// from step 1
+export const DATABASE_KEY = '...';
+export const DATABASE_URL = '...';
+// from step 2
 export const BOT_ID = '...';
 export const BOT_TOKEN = '...:...';
-export const API_KEY = '...';
-export const DATABASE_URL = '...';
+// from step 3
+export const GOOGLE_API_KEY = '...';
 ```
+5) Finally - for the webhooks to work - you will also need to create a self signed SSL certificate like so:
+```bash
+openssl req -newkey rsa:2048 -sha256 -nodes -keyout ./certs/private.key -x509 -days 365 -out ./certs/public.pem -subj "/C=DE/ST=Bavaria/L=Munich/O=/CN=YOURDOMAIN.EXAMPLE"
+```
+You will need to replace YOURDOMAIN.EXAMPLE with the public domain via that the bot can be found.
 
 ## Build
 Before you can build the code, you need to install all dependencies:

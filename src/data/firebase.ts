@@ -4,7 +4,7 @@ import { Search } from '../models/search';
 
 import { Observable } from 'rxjs';
 
-import { API_KEY, DATABASE_URL } from '../config';
+import { DATABASE_KEY, DATABASE_URL } from '../config';
 
 enum EventType {
   ADDED,
@@ -43,7 +43,7 @@ export class Database {
 
   constructor() {
     const config = {
-      apiKey: API_KEY,
+      apiKey: DATABASE_KEY,
       databaseURL: DATABASE_URL
     };
     const app = firebase.initializeApp(config);

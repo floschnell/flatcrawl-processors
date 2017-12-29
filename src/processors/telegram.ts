@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as Telegraf from 'telegraf';
 import * as Extra from 'telegraf/extra';
 import * as Markup from 'telegraf/markup';
@@ -15,6 +16,11 @@ import {
 import { evaluateFlat } from '../services/evaluation';
 
 import { BOT_ID, BOT_TOKEN } from '../config';
+
+const tlsOptions = {
+  cert: fs.readFileSync('./certs/public.pem'),
+  key:  fs.readFileSync('./certs/private.key'),
+};
 
 const dbConnection = new Database();
 const telegraf = new Telegraf(BOT_TOKEN);
@@ -540,7 +546,13 @@ telegraf.on('text', async ctx => {
   }
 });
 
-telegraf.startPolling();
+// Set telegram webhook
+telegraf.telegram.setWebhook('https://floschnell.de:8443/telegram-webhook', {
+  source: fs.readFileSync('./certs/public.pem')
+});
+
+// Start https webhook
+telegraf.startWebhook('/telegram-webhook', tlsOptions, 8443)
 
 function calculateDirections(
   search: Search,

@@ -27,7 +27,7 @@
     "deploy:container":
       "docker build . -t floschnell/flatcrawl:latest; docker push floschnell/flatcrawl",
     "deploy:remote":
-      "ssh root@floschnell.de \"docker pull floschnell/flatcrawl:latest; docker stop flatcrawl; docker rm flatcrawl; docker run -dit --restart unless-stopped --name flatcrawl floschnell/flatcrawl:latest\""
+      "ssh root@floschnell.de \"docker pull floschnell/flatcrawl:latest; docker stop flatcrawl; docker rm flatcrawl; docker run -dit --restart unless-stopped -p 8443:8443 --name flatcrawl floschnell/flatcrawl:latest\""
   },
   "author": "Florian Schnell",
   "license": "ISC"
