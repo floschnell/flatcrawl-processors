@@ -1,5 +1,7 @@
 import * as googleMaps from '@google/maps';
 
+import { GOOGLE_API_KEY } from '../config';
+
 export interface ILocation {
   lat: number;
   lng: number;
@@ -25,7 +27,7 @@ export interface ILeg {
 
 const mapsClient = googleMaps.createClient({
   Promise,
-  key: 'AIzaSyAnfiUDFBlhfDnT9viB3g4yfpk-v1-0qnE'
+  key: GOOGLE_API_KEY,
 });
 
 export function getCoordsForAddress(address): Promise<ILocation> {
