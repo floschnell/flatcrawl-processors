@@ -21,7 +21,7 @@ import { BOT_ID, BOT_TOKEN } from '../config';
 
 const tlsOptions = {
   cert: fs.readFileSync('./certs/public.pem'),
-  key:  fs.readFileSync('./certs/private.key'),
+  key: fs.readFileSync('./certs/private.key'),
 };
 
 const dbConnection = new Database();
@@ -594,20 +594,24 @@ async function sendFlatToChat(
     `The flat costs *${flat.rent}€* rent. It has *${flat.rooms} rooms* and *${flat.squaremeters} sqm*.`
   );
 
-  directions.forEach(direction => {
-    message.push(
-      `From this flat to *${direction.targetName}* will take you *${direction
-        .leg.duration.text}* (${direction.leg.distance
-        .text}) by ${direction.transport}.`
-    );
-  });
+  if (directions != null) {
+    directions.forEach(direction => {
+      message.push(
+        `From this flat to *${direction.targetName}* will take you *${direction
+          .leg.duration.text}* (${direction.leg.distance
+            .text}) by ${direction.transport}.`
+      );
+    });
+  } else {
+    message.push(`Sorry, I could not calculate any trip times for this flat.`);
+  }
 
   telegram.sendMessage(chat.id, message.join('\n'), {
     parse_mode: 'Markdown'
   });
 }
 
-async function checkSearch(search: Search, flat) {
+async function checkSearch(search: Search, flat: Flat) {
   const hasActiveChats = (inSearch: Search): boolean => {
     let hasActive = false;
     inSearch.chats.forEach(active => {
@@ -625,7 +629,13 @@ async function checkSearch(search: Search, flat) {
       search.user.name,
       '- calculating directions ...'
     );
-    const directions = await calculateDirections(search, flat);
+
+    let directions = null;
+    try {
+      directions = await calculateDirections(search, flat);
+    } catch (e) {
+      console.error(`could not get directions for ${flat.address}:`, e);
+    }
     console.log('done.');
 
     console.log('sending info message to chats now!');
