@@ -1,6 +1,8 @@
 import * as https from 'https';
+import * as iconv from 'iconv-lite';
 import * as jsdom from 'jsdom';
 import { Flat } from '../models/flat';
+
 const { JSDOM } = jsdom;
 
 /**
@@ -10,14 +12,19 @@ const { JSDOM } = jsdom;
  */
 export abstract class Crawler {
   public name: string;
-  public host: string;
-  public path: string;
+
+  private host: string;
+  private path: string;
+  private selector: string;
+  private encoding: string;
   private document: Document;
 
-  constructor(name, inhost, inpath) {
+  constructor({ name, selector, host, path, encoding = 'utf-8' }) {
     this.name = name;
-    this.host = inhost;
-    this.path = inpath;
+    this.host = host;
+    this.path = path;
+    this.selector = selector;
+    this.encoding = encoding;
   }
 
   public async run() {
@@ -26,10 +33,7 @@ export abstract class Crawler {
       const flats = await this.getLatestFlats(document);
       return flats;
     } catch (e) {
-      console.error(
-        `There was an exception while executing the "${this.name}" crawler:`,
-        e
-      );
+      console.error(`There was an exception while executing the "${this.name}" crawler:`, e);
       console.log('Will return empty list of results.');
       return [];
     }
@@ -40,7 +44,36 @@ export abstract class Crawler {
    * 
    * @memberOf Crawler
    */
-  public abstract getLatestFlats(document: Document): Promise<Flat[]>;
+  public async getLatestFlats(document: Document): Promise<Flat[]> {
+    const list = [...document.querySelectorAll(this.selector)];
+    const flats: Flat[] = [];
+
+    for (const row of list) {
+      try {
+        flats.push(await this.parseFlat(row));
+      } catch (e) {
+        console.error(`Error while executing crawler "${this.name}": ${e.message}.`, e);
+        console.log('Flat will not be in results.');
+      }
+    }
+
+    return flats.filter(flat => flat != null);
+  }
+
+  /**
+   * Takes a flat object and generates a URL to the specific flat's page.
+   * 
+   * @param flat The flat which we want to generate the URL for.
+   */
+  public abstract getURL(flat: Flat): string;
+
+  /**
+   * Takes a HTML element and converts it into a flat object.
+   * 
+   * @param flatElement Element within the HTML page that contains all
+   * information about the flat.
+   */
+  protected abstract parseFlat(flatElement: Element): Promise<Flat>;
 
   /**
    * Retrieves all text content below that specific element.
@@ -50,7 +83,7 @@ export abstract class Crawler {
    * 
    * @memberOf Crawler
    */
-  protected getTextSimple(element, selector) {
+  protected getTextSimple(element, selector): string {
     if (element.querySelector(selector)) {
       return element.querySelector(selector).textContent;
     } else {
@@ -66,14 +99,14 @@ export abstract class Crawler {
    * 
    * @memberOf Crawler
    */
-  protected getText(element, selector) {
+  protected getText(element, selector): string {
     const selectedElement = element.querySelector(selector);
     const children = [...selectedElement.childNodes];
 
     return children
       .map(
-        child =>
-          child.nodeValue ? child.nodeValue.replace('\n', '').trim() : ''
+      child =>
+        child.nodeValue ? child.nodeValue.replace('\n', '').trim() : ''
       )
       .reduce((a, b) => a + b);
   }
@@ -106,24 +139,24 @@ export abstract class Crawler {
     return new Promise((resolve, reject) => {
       https
         .request(
-          {
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36'
-            },
-            host: this.host,
-            path: this.path
+        {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36'
           },
-          response => {
-            let html = '';
-            response.on('data', chunk => {
-              html += chunk;
-            });
-            response.on('end', () => {
-              const dom = new JSDOM(html);
-              resolve(dom.window.document);
-            });
-          }
+          host: this.host,
+          path: this.path
+        },
+        response => {
+          let html = '';
+          response.on('data', (chunk: Buffer) => {
+            html += iconv.decode(chunk, this.encoding);
+          });
+          response.on('end', () => {
+            const dom = new JSDOM(html);
+            resolve(dom.window.document);
+          });
+        }
         )
         .end();
     });

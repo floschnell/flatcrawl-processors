@@ -5,6 +5,8 @@ import * as Markup from 'telegraf/markup';
 import * as session from 'telegraf/session';
 import * as Telegram from 'telegraf/telegram';
 
+import crawlers from '../crawlers/index';
+
 import { Database } from '../data/firebase';
 import { Flat } from '../models/flat';
 import { ILimit, IUser, Search } from '../models/search';
@@ -578,19 +580,13 @@ async function sendFlatToChat(
   chatId: number
 ): Promise<void> {
   const message = [];
-  let url = '';
   const chat = await telegram.getChat(chatId);
   const salution = chat.first_name ? chat.first_name : 'guys';
+  const url = crawlers
+    .find(crawler => crawler.name === flat.source)
+    .getURL(flat);
 
   console.log('sending message to chat', chatId);
-
-  if (flat.source === 'immoscout') {
-    url = `http://www.immobilienscout24.de/expose/${flat.externalid}`;
-  } else if (flat.source === 'immowelt') {
-    url = `https://www.immowelt.de/expose/${flat.externalid}`;
-  } else if (flat.source === 'wggesucht') {
-    url = `https://www.wg-gesucht.de/${flat.externalid}`;
-  }
 
   message.push(`Hey ${salution}, found *a new flat on ${flat.source}*!`);
   message.push(`[${flat.title}](${url})`);

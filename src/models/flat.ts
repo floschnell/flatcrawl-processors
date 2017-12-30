@@ -14,7 +14,7 @@ export class Flat {
     public rooms: number;
     public date: number;
 
-    constructor ({source, externalid, title, address, rent, squaremeters, rooms, date}) {
+    constructor({ source, externalid, title, address, rent, squaremeters, rooms, date }) {
         this.source = source;
         this.externalid = externalid;
         this.title = title.trim();
@@ -27,7 +27,7 @@ export class Flat {
 
     public get internalId() {
         const externalId = this.externalid.split('.').join('_');
-        
+
         return `${this.source}-${externalId}`;
     }
 }

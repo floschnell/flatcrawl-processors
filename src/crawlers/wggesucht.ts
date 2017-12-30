@@ -9,37 +9,37 @@ import { Crawler } from './crawler.js';
  */
 export class WGGesuchtCrawler extends Crawler {
   constructor(inhost, inpath) {
-    super('wggesucht', inhost, inpath);
+    super({
+      host: inhost,
+      name: 'wggesucht',
+      path: inpath,
+      selector: 'tr[adid^=wohnungen]',
+    });
   }
 
-  /**
-   * @inheritDoc
-   */
-  public async getLatestFlats(document: Document): Promise<Flat[]> {
-    const results = [...document.querySelectorAll('tr[adid^=wohnungen]')];
-
-    return results
-      .map(result => this.parseFlat(result))
-      .filter(flat => flat !== null);
+  public getURL(flat: Flat): string {
+    return `https://www.wg-gesucht.de/${flat.externalid}`;
   }
 
-  private parseFlat(flatElement): Flat {
+  protected parseFlat(flatElement: Element): Promise<Flat> {
     const limitedOnly =
       this.getTextSimple(flatElement, '.ang_spalte_freibis').trim().length > 0;
     if (!limitedOnly) {
       const city = this.getTextSimple(flatElement, '.ang_spalte_stadt')
         .replace('\n', '')
         .trim();
-      return new Flat({
-        address: `München, ${city}`,
-        date: new Date().getTime(),
-        externalid: this.getAttribute(flatElement, null, 'adid'),
-        rent: this.getTextSimple(flatElement, '.ang_spalte_miete'),
-        rooms: this.getTextSimple(flatElement, '.ang_spalte_zimmer'),
-        source: this.name,
-        squaremeters: this.getTextSimple(flatElement, '.ang_spalte_groesse'),
-        title: 'Wohnung auf WG Gesucht'
-      });
+      return Promise.resolve(
+        new Flat({
+          address: `München, ${city}`,
+          date: new Date().getTime(),
+          externalid: this.getAttribute(flatElement, null, 'adid'),
+          rent: this.getTextSimple(flatElement, '.ang_spalte_miete'),
+          rooms: this.getTextSimple(flatElement, '.ang_spalte_zimmer'),
+          source: this.name,
+          squaremeters: this.getTextSimple(flatElement, '.ang_spalte_groesse'),
+          title: 'Wohnung auf WG Gesucht'
+        })
+      );
     } else {
       return null;
     }

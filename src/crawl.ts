@@ -1,31 +1,9 @@
+import { Crawler } from './crawlers/crawler';
 import { Database } from './data/firebase';
 import { Flat } from './models/flat';
 
-import { Crawler } from './crawlers/crawler';
-import { ImmoScout24Crawler } from './crawlers/immoscout24';
-import { ImmoWeltCrawler } from './crawlers/immowelt';
-import { WGGesuchtCrawler } from './crawlers/wggesucht';
+import crawlers from './crawlers/index';
 
-const immoScout24Crawler = new ImmoScout24Crawler(
-  'www.immobilienscout24.de',
-  '/Suche/S-2/P-1/Wohnung-Miete/Bayern/Muenchen?pagerReporting=true'
-);
-
-const immoWeltCrawler = new ImmoWeltCrawler(
-  'www.immowelt.de',
-  '/liste/muenchen/wohnungen/mieten?sort=relevanz'
-);
-
-const wgGesuchtCrawler = new WGGesuchtCrawler(
-  'www.wg-gesucht.de',
-  '/wohnungen-in-Muenchen.90.2.0.0.html'
-);
-
-const crawlers: Crawler[] = [
-  wgGesuchtCrawler,
-  immoWeltCrawler,
-  immoScout24Crawler
-];
 const database = new Database();
 
 async function crawlFlats(): Promise<Flat[][]> {
@@ -49,7 +27,7 @@ async function sendFlatsToDatabase(flats: Flat[]): Promise<void> {
         console.log('Saved new flat:', JSON.stringify(result));
       }
     } catch (e) {
-      console.error();
+      console.error(e);
     }
   });
   await Promise.all(promisedSaves);
@@ -71,8 +49,10 @@ async function run() {
       new Array<Flat>()
     );
 
+    console.log('flats:', JSON.stringify(flats, null, 2));
+
     // save results to database
-    await sendFlatsToDatabase(flats);
+    // await sendFlatsToDatabase(flats);
   } catch (e) {
     console.error(e);
   }
