@@ -18,13 +18,13 @@ async function crawlFlats(): Promise<Flat[][]> {
 }
 
 async function sendFlatsToDatabase(flats: Flat[]): Promise<void> {
-  console.log('sending flats to database ...');
+  console.log(`sending ${flats.length} flats to database ...`);
 
   const promisedSaves = flats.map(async flat => {
     try {
       const result = await database.saveFlat(flat);
       if (result !== null) {
-        console.log('Saved new flat:', JSON.stringify(result));
+        console.log('Saved new flat:', JSON.stringify(result, null, 2));
       }
     } catch (e) {
       console.error(e);
@@ -49,10 +49,11 @@ async function run() {
       new Array<Flat>()
     );
 
-    console.log('flats:', JSON.stringify(flats, null, 2));
+    // useful when doing debugging ...
+    // console.log('flats:', JSON.stringify(flats, null, 2));
 
     // save results to database
-    // await sendFlatsToDatabase(flats);
+    await sendFlatsToDatabase(flats);
   } catch (e) {
     console.error(e);
   }
