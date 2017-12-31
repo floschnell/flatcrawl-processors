@@ -318,34 +318,46 @@ telegraf.on('text', async ctx => {
       const substep = step[1];
 
       if (substep === 'add') {
-        const location = await getCoordsForAddress(ctx.message.text.trim());
-        ctx.session.step = 'locations:confirm';
-        ctx.session.location = {
-          geo: {
-            lat: location.lat,
-            lng: location.lng
-          }
-        };
-
-        await ctx.replyWithLocation(
-          location.lat,
-          location.lng,
-          question(ctx, false)
-        );
-
-        await telegram.sendMessage(
-          ctx.chat.id,
-          `${mentionSender(ctx)}, is this location correct?`,
-          {
-            parse_mode: 'markdown',
-            reply_markup: {
-              keyboard: [['yes', 'no']],
-              one_time_keyboard: true,
-              resize_keyboard: true,
-              selective: true
+        try {
+          const location = await getCoordsForAddress(ctx.message.text.trim());
+          ctx.session.step = 'locations:confirm';
+          ctx.session.location = {
+            geo: {
+              lat: location.lat,
+              lng: location.lng
             }
-          }
-        );
+          };
+          await ctx.replyWithLocation(
+            location.lat,
+            location.lng,
+            question(ctx, false)
+          );
+          await telegram.sendMessage(
+            ctx.chat.id,
+            `${mentionSender(ctx)}, is this location correct?`,
+            {
+              parse_mode: 'markdown',
+              reply_markup: {
+                keyboard: [['yes', 'no']],
+                one_time_keyboard: true,
+                resize_keyboard: true,
+                selective: true
+              }
+            }
+          );
+        } catch (e) {
+          console.error('Could not resolve given address to pair of coordinates.');
+          await telegram.sendMessage(
+            ctx.chat.id,
+            `Sorry, ${mentionSender(
+              ctx
+            )}, that does not seem to be a valid address. Can you be more precise please?`,
+            {
+              parse_mode: 'markdown',
+              reply_markup: { force_reply: true, selective: true }
+            }
+          );
+        }
       } else if (substep === 'confirm') {
         const response = ctx.message.text.trim().toLowerCase();
         if (response === 'yes') {

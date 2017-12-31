@@ -31,7 +31,7 @@ const mapsClient = googleMaps.createClient({
 });
 
 export function getCoordsForAddress(address): Promise<ILocation> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     mapsClient
       .geocode({
         address
@@ -44,13 +44,15 @@ export function getCoordsForAddress(address): Promise<ILocation> {
           const result = results[0];
 
           resolve(result.geometry.location);
+        } else {
+          reject("Could not resolve address.");
         }
       });
   });
 }
 
 export function getDirections(origin, destination, mode): Promise<ILeg> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     mapsClient
       .directions({
         destination,
@@ -63,6 +65,8 @@ export function getDirections(origin, destination, mode): Promise<ILeg> {
           const route = response.json.routes[0];
 
           resolve(route.legs[0] as ILeg);
+        } else {
+          reject("Could not calculate directions.");
         }
       });
   });
