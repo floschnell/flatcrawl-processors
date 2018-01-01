@@ -1,7 +1,5 @@
 # Flatcrawl
-Flatcrawl makes it easy to search for flats!
-
-It **collects flats from different rental sites** and **exposes them in a consistent shape**. Furthermore it lets you define **custom searches** through **a Telegram bot** which sends **instant messages to chats or groups on new matches**, where you will be able to **discuss them together** just as they are coming in.
+Flatcrawl **collects flats from different rental sites** and **exposes them in a consistent shape**. Furthermore it lets you define **custom searches** through **a Telegram bot** which sends **instant messages to chats or groups on new matches**, where you will be able to **discuss them together** just as they are coming in.
 
 Currently supported cities:
 - Munich
