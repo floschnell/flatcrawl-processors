@@ -1,5 +1,42 @@
 # Flatcrawl
-Flatcrawl makes it easy to search for flats! It **collects flats from different rental sites** and **exposes them in a consistent shape**. Furthermore it lets you define **custom searches** through **a Telegram bot** that sends **instant messages on new matches**.
+Flatcrawl makes it easy to search for flats!
+
+It **collects flats from different rental sites** and **exposes them in a consistent shape**. Furthermore it lets you define **custom searches** through **a Telegram bot** which sends **instant messages to chats or groups on new matches**, where you will be able to **discuss them together** just as they are coming in.
+
+Currently supported cities:
+- Munich
+- more cities will follow soon ...
+
+Currently supported web portals:
+- [ImmobilienScout24](https://www.immobilienscout24.de/)
+- [WG Gesucht](http://www.wg-gesucht.de)
+- [Süddeutsche Zeitung: Immobilienmarkt](https://immobilienmarkt.sueddeutsche.de)
+- [ImmoWelt](https://www.immowelt.de/)
+
+## Usage
+
+This chapter describes how to use the flatcrawler. Only thing that you will need is the [Telegram App](https://telegram.org/) on either your smartphone, your computer or any other supported device.
+
+### Create a Search
+
+To create a search, you need to get in touch with the FlatCrawl bot. You can search for it and communicate with it like with any other contact in Telegram.
+Use the app's search field and look for *FlatcrawlBot*. Once found, click onto it and hit the Start button to begin a conversation.
+
+Right now the bot is capable of a few commands that you can simply type into the conversation window. To start a search, simply type `/search`. Afterwards the bot will ask you some questions and eventually keep looking for flats that match your criteria.
+
+![Conversation with Flat Crawling Bot](./img/conversation.png "An Example Conversation with the Flat Crawling Bot")
+
+Once the search is setup, the bot will output an numeric ID. Remember it well. The bot will not start to send flats right away! This is because you might want to be notified within a group, so that all your potential flat mates receive the offers as well. This is very helpful, because all members of the group will then be able to discuss the different flats just as they are popping in.
+
+### Subscribe to a Search
+
+To continuously receive new flats that match your search criteria, first go to the chat or group conversation where you would like to be notified. Then open the chat menu and add a new member. Search and choose the *FlatcrawlBot*.
+
+Then, back in the chat, you just need to enter `/subscribe [ID]`. Of course, you will need to replace [ID] with the ID that the bot provided you with, when you finished the search setup.
+
+That's it, now you will receive all the new flats that get posted on all the different web portals if they only match your search criteria.
+
+## Development
 
 This project consists of three parts:
 - **Firebase Realtime Database:** Stores found flats, users and their configured searches.
@@ -8,7 +45,7 @@ This project consists of three parts:
 
 Of those **only the crawler and telegram client are under source control**. However, if you setup a firebase account and create an empty database, it will then be filled automatically as soon as you run the crawling application.
 
-## Setup
+### Setup
 If you want to run the whole infrastructure yourself, you will need to do the following things:
 1) Create a [Firebase account](https://firebase.google.com/) and setup an empty realtime database.
 2) [Create a Telegram bot via the BotFather](https://core.telegram.org/bots#creating-a-new-bot).
@@ -30,7 +67,7 @@ openssl req -newkey rsa:2048 -sha256 -nodes -keyout ./certs/private.key -x509 -d
 ```
 You will need to replace YOURDOMAIN.EXAMPLE with the public domain via that the bot can be found.
 
-## Build
+### Build
 Before you can build the code, you need to install all dependencies:
 ```
 yarn install
@@ -41,15 +78,15 @@ yarn build
 ```
 which will compile all Typescript files and put them in a folder called `dist/`.
 
-## Run
+### Run
 Once you have completed the setup and build steps, you can run the crawler and telegram client.
 
-### Crawler
+#### Crawler
 ```
 yarn start:crawler
 ```
 
-### Telegram Client
+#### Telegram Client
 ```
 yarn start:client
 ```
