@@ -9,4 +9,4 @@ COPY . .
 
 RUN ./node_modules/.bin/tsc -p tsconfig.json
 
-CMD [ "yarn", "start:client" ]
+CMD [ "yarn", "start" ]

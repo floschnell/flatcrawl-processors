@@ -1,3 +1,4 @@
+import * as amqp from 'amqplib';
 import * as fs from 'fs';
 import * as Telegraf from 'telegraf';
 import * as Extra from 'telegraf/extra';
@@ -5,24 +6,31 @@ import * as Markup from 'telegraf/markup';
 import * as session from 'telegraf/session';
 import * as Telegram from 'telegraf/telegram';
 
-import crawlers from '../crawlers/index';
-
-import { Database } from '../data/firebase';
-import { Flat } from '../models/flat';
-import { ILimit, IUser, Search } from '../models/search';
+import { onNewFlat } from './data/amqp';
+import { Database } from './data/firebase';
+import { Flat } from './models/flat';
+import { ILimit, IUser, Search } from './models/search';
 import {
   getCoordsForAddress,
   getDirections,
   ILeg
-} from '../services/directions';
-import { evaluateFlat } from '../services/evaluation';
+} from './services/directions';
+import { evaluateFlat } from './services/evaluation';
 
-import { BOT_ID, BOT_TOKEN } from '../config';
+import { BOT_ID, BOT_TOKEN } from './config';
 
 const tlsOptions = {
   cert: fs.readFileSync('./certs/public.pem'),
   key: fs.readFileSync('./certs/private.key'),
 };
+
+const crawlerUrls = {
+  immoscout: flat => `http://www.immobilienscout24.de/expose/${flat.externalid}`,
+  immowelt: flat => `https://www.immowelt.de/expose/${flat.externalid}`,
+  sueddeutsche: flat => `https://immobilienmarkt.sueddeutsche.de/Wohnungen/` +
+    `mieten/Muenchen/Wohnung/${flat.externalid}?comeFromTL=1`,
+  wggesucht: flat => `https://www.wg-gesucht.de/${flat.externalid}`,
+}
 
 const dbConnection = new Database();
 const telegraf = new Telegraf(BOT_TOKEN);
@@ -594,9 +602,7 @@ async function sendFlatToChat(
   const message = [];
   const chat = await telegram.getChat(chatId);
   const salution = chat.first_name ? chat.first_name : 'guys';
-  const url = crawlers
-    .find(crawler => crawler.name === flat.source)
-    .getURL(flat);
+  const url = crawlerUrls[flat.source] ? crawlerUrls[flat.source](flat) : 'about:blank';
 
   console.log('sending message to chat', chatId);
 
@@ -618,7 +624,8 @@ async function sendFlatToChat(
     message.push(`Sorry, I could not calculate any trip times for this flat.`);
   }
 
-  telegram.sendMessage(chat.id, message.join('\n'), {
+  console.log("sending message with content: ", message.join('\n'));
+  await telegram.sendMessage(chat.id, message.join('\n'), {
     parse_mode: 'Markdown'
   });
 }
@@ -664,24 +671,20 @@ async function checkSearch(search: Search, flat: Flat) {
   lastCheck = new Date();
 }
 
-dbConnection.onFlatAdded.subscribe(event => {
-  if (initialized) {
-    flatsChecked++;
-    searches.forEach(search => {
-      checkSearch(search, event.flat);
-    });
-  }
-});
-
 dbConnection.onSearchAdded.subscribe(event => {
   if (initialized) {
     searchesCreated++;
     console.log('new search', event.searchUid, JSON.stringify(event.search));
     searches.set(event.searchUid, event.search);
-    dbConnection
-      .getLatestFlats()
-      .then(flats => flats.forEach(flat => checkSearch(event.search, flat)));
   }
+});
+
+onNewFlat.subscribe(flat => {
+  console.log("incoming flat:", flat);
+  flatsChecked++;
+  searches.forEach(search => {
+    checkSearch(search, flat);
+  });
 });
 
 dbConnection.onSearchRemoved.subscribe(event => {

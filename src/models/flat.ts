@@ -12,17 +12,17 @@ export class Flat {
     public rent: number;
     public squaremeters: number;
     public rooms: number;
-    public date: number;
+    public date: Date;
 
-    constructor({ source, externalid, title, address, rent, squaremeters, rooms, date }) {
+    constructor({ source, date, data: { externalid, title, address, rent, squaremeters, rooms } }) {
         this.source = source;
         this.externalid = externalid;
         this.title = title.trim();
         this.address = address.trim();
-        this.rent = rent.match(/[\d\,]/g).join('');
-        this.squaremeters = squaremeters.match(/[\d\.,]/g).join('');
-        this.rooms = rooms.match(/[\d,]/g).join('');
-        this.date = date;
+        this.rent = rent;
+        this.squaremeters = squaremeters;
+        this.rooms = rooms;
+        this.date = new Date(date * 1000);
     }
 
     public get internalId() {

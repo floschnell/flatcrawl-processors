@@ -38,9 +38,6 @@ export class Database {
   private searchAddedObserver: Observable<ISearchEvent>;
   private searchRemovedObserver: Observable<ISearchEvent>;
 
-  // flat events
-  private flatAddedObserver: Observable<IFlatEvent>;
-
   constructor() {
     const config = {
       apiKey: DATABASE_KEY,
@@ -96,25 +93,6 @@ export class Database {
         searchesRef.off();
       };
     });
-
-    this.flatAddedObserver = Observable.create(observer => {
-      const flatsRef = this.database.ref('flats');
-      flatsRef
-        .orderByChild('date')
-        .limitToLast(15)
-        .on('child_added', snapshot => {
-          const flat = new Flat(snapshot.val());
-          const event = {
-            flat,
-            flatUid: flat.internalId,
-            type: EventType.ADDED
-          } as IFlatEvent;
-          observer.next(event);
-          return () => {
-            flatsRef.off();
-          };
-        });
-    });
   }
 
   public get onSearchChanged(): Observable<ISearchEvent> {
@@ -127,22 +105,6 @@ export class Database {
 
   public get onSearchRemoved(): Observable<ISearchEvent> {
     return this.searchRemovedObserver;
-  }
-
-  public get onFlatAdded(): Observable<IFlatEvent> {
-    return this.flatAddedObserver;
-  }
-
-  public saveFlat(flat: Flat): Promise<Flat> {
-    const flatsRef = this.database.ref(`flats`);
-
-    return flatsRef.once('value').then(snapshot => {
-      if (!snapshot.exists() || !snapshot.hasChild(flat.internalId)) {
-        this.database.ref(`flats/${flat.internalId}`).set(flat);
-        return flat;
-      }
-      return null;
-    }) as Promise<Flat>;
   }
 
   public getSearches(): Promise<Map<string, Search>> {
@@ -159,23 +121,6 @@ export class Database {
         resolve(mapOfSearches);
       });
     });
-  }
-
-  public getLatestFlats(): Promise<Flat[]> {
-    return new Promise(resolve =>
-      this.database
-        .ref('flats')
-        .orderByChild('date')
-        .limitToLast(15)
-        .once('value', snapshot => {
-          const flats = [];
-          const flatsById = snapshot.val();
-          Object.keys(flatsById).forEach(id => {
-            flats.push(flatsById[id]);
-          });
-          resolve(flats.map(flat => new Flat(flat)));
-        })
-    );
   }
 
   public async saveSearch(search: Search): Promise<number> {
@@ -213,7 +158,7 @@ export class Database {
   public updateSearch(searchId, search): Promise<void> {
     return this.database.ref(`searches/${searchId}`).set(search) as Promise<
       void
-    >;
+      >;
   }
 
   public searchExists(searchId): Promise<boolean> {

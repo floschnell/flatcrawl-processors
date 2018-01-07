@@ -4,6 +4,7 @@
   "description": "Flatcrawl makes it easy to search for flats! It collects flats from different rental sites and exposes them in a consistent shape. Furthermore it lets you define custom searches through a Telegram bot that sends instant messages on new matches.",
   "dependencies": {
     "@google/maps": "^0.4.5",
+    "amqplib": "^0.5.2",
     "firebase": "^3.9.0",
     "https": "^1.0.0",
     "iconv-lite": "^0.4.19",
@@ -21,8 +22,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start:crawler": "node ./dist/crawl.js",
-    "start:client": "node ./dist/processors/telegram.js",
+    "start": "node ./dist/index.js",
     "deploy": "yarn deploy:container; yarn deploy:remote",
     "deploy:container": "docker build . -t floschnell/flatcrawl:latest; docker push floschnell/flatcrawl",
     "deploy:remote": "ssh root@floschnell.de \"docker pull floschnell/flatcrawl:latest; docker stop flatcrawl; docker rm flatcrawl; docker run -dit --restart unless-stopped -p 8443:8443 --name flatcrawl floschnell/flatcrawl:latest\""
