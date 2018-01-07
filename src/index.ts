@@ -624,7 +624,6 @@ async function sendFlatToChat(
     message.push(`Sorry, I could not calculate any trip times for this flat.`);
   }
 
-  console.log("sending message with content: ", message.join('\n'));
   await telegram.sendMessage(chat.id, message.join('\n'), {
     parse_mode: 'Markdown'
   });
