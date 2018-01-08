@@ -1,15 +1,10 @@
-# Flatcrawl
-Flatcrawl **collects flats from different rental sites** and **exposes them in a consistent shape**. Furthermore it lets you define **custom searches** through **a Telegram bot** which sends **instant messages to chats or groups on new matches**, where you will be able to **discuss them together** just as they are coming in.
+# flatcrawl-processors
 
-Currently supported cities:
-- Munich
-- more cities will follow soon ...
+This repository is part of my **flatcrawl project**. The processors will receive new flats from the message broker (ie. RabbitMQ). They will then evaluate the flats against the user defined searches and send them notification on different channels (ie. Telegram), when they have a match.
 
-Currently supported web portals:
-- [ImmobilienScout24](https://www.immobilienscout24.de/)
-- [WG Gesucht](http://www.wg-gesucht.de)
-- [Süddeutsche Zeitung: Immobilienmarkt](https://immobilienmarkt.sueddeutsche.de)
-- [ImmoWelt](https://www.immowelt.de/)
+## The flatcrawl project
+
+The purpose of the project is to **collect flats from different rental sites** and **expose them in a consistent shape**. Eventually it lets users define **custom searches** and provides them with **instant updates on new matching flats**.
 
 ## Usage
 
