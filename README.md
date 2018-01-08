@@ -1,6 +1,6 @@
 # flatcrawl-processors
 
-This repository is part of my **flatcrawl project**. The processors will receive new flats from the message broker (ie. RabbitMQ). They will then evaluate the flats against the user defined searches and send them notification on different channels (ie. Telegram), when they have a match.
+This repository is part of my **flatcrawl project**. The processors will receive new flats from the message broker (ie. RabbitMQ). They will then evaluate the flats against the user defined searches and send them notifications on different channels (ie. Telegram), when they have a match.
 
 ## The flatcrawl project
 
