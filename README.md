@@ -2,9 +2,13 @@
 
 This repository is part of my **flatcrawl project**. The processors will receive new flats from the message broker (ie. RabbitMQ). They will then evaluate the flats against the user defined searches and send them notifications on different channels (ie. Telegram), when they have a match.
 
+If you are interested in how the flats end up at the message broker: there's [another repository that contains the different crawlers](https://github.com/floschnell/flatcrawl-crawlers) which will extract the flat information from the different rental portals and then sends them to the message broker's queue.
+
 ## The flatcrawl project
 
 The purpose of the project is to **collect flats from different rental sites** and **expose them in a consistent shape**. Eventually it lets users define **custom searches** and provides them with **instant updates on new matching flats**.
+
+**Clarification**: flats are *not* stored on the server. The purpose is not to create a competing portal, but to extend usability and help users find the right flat quickly by receiving updates from several sites without the hassle to setup and maintain different searches.
 
 ## Usage
 
