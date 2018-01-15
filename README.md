@@ -21,7 +21,9 @@ Use the app's search field and look for *FlatcrawlBot*. Once found, click onto i
 
 Right now the bot is capable of a few commands that you can simply type into the conversation window. To start a search, simply type `/search`. Afterwards the bot will ask you some questions and eventually keep looking for flats that match your criteria.
 
-![Conversation with Flat Crawling Bot](./img/conversation.png "An Example Conversation with the Flat Crawling Bot")
+<p align="center">
+<img alt="An Example Conversation with the Flat Crawling Bot" src="./img/conversation.png" />
+</p>
 
 Once the search is setup, the bot will output an numeric ID. Remember it well. The bot will not start to send flats right away! This is because you might want to be notified within a group, so that all your potential flat mates receive the offers as well. This is very helpful, because all members of the group will then be able to discuss the different flats just as they are popping in.
 
@@ -35,12 +37,11 @@ That's it, now you will receive all the new flats that get posted on all the dif
 
 ## Development
 
-This project consists of three parts:
-- **Firebase Realtime Database:** Stores found flats, users and their configured searches.
-- **Crawling Scheduler:** A tool that can be setup on a local node with changing IP address. It has yet crawling implementations for different flat renting search engines.
-- **Telegram Processor:** Client application that will listen for changes on the realtime database. As soon as a new flat becomes available it will check all user searches and send out messages whenever matches have been found.
+This project consists of two parts:
+- **Firebase Realtime Database:** Stores users and their configured searches.
+- **Telegram Processor:** Client application that will listen for new events on the queue. As soon as a new flat becomes available it will check all user searches and send out messages whenever matches have been found.
 
-Of those **only the crawler and telegram client are under source control**. However, if you setup a firebase account and create an empty database, it will then be filled automatically as soon as you run the crawling application.
+Of those **only the telegram client is under source control**. However, if you setup a firebase account and create an empty database, it will then be filled automatically as soon as you run the crawling application.
 
 ### Setup
 If you want to run the whole infrastructure yourself, you will need to do the following things:
@@ -76,14 +77,7 @@ yarn build
 which will compile all Typescript files and put them in a folder called `dist/`.
 
 ### Run
-Once you have completed the setup and build steps, you can run the crawler and telegram client.
-
-#### Crawler
+Once you have completed the setup and build steps, you can run all processors by
 ```
-yarn start:crawler
-```
-
-#### Telegram Client
-```
-yarn start:client
+yarn start
 ```
