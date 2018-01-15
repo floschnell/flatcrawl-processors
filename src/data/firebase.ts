@@ -193,7 +193,7 @@ export class Database {
       .then(snapshot => snapshot.val()) as Promise<any>;
   }
 
-  private getNewUserSearchId(userId: number): Promise<number> {
+  private getNewUserSearchId(userId: string): Promise<number> {
     const userRef = this.database.ref(`users/${userId}`);
     return new Promise((resolve, reject) => {
       userRef.transaction(

@@ -2,7 +2,7 @@ import { mapToObject } from '../utils';
 import { Location } from './location';
 
 export interface IUser {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -15,9 +15,8 @@ export class Search {
   public user: IUser;
   public locations: Location[];
   public limits: Map<string, ILimit>;
-  public chats: Map<number, boolean>;
 
-  constructor({ limits = {}, locations = [], chats = {}, user = {} }) {
+  constructor({ limits = {}, locations = [], user = {} }) {
     this.locations = locations.map(location => new Location(location));
 
     this.limits = new Map();
@@ -28,18 +27,12 @@ export class Search {
       });
     });
 
-    this.chats = new Map();
-    Object.keys(chats).forEach(uid => {
-      this.chats.set(parseInt(uid, 10), chats[uid]);
-    });
-
     this.user = user as IUser;
     this.user.name = this.user.name || null;
   }
 
   public toDb(): any {
     return {
-      chats: mapToObject(this.chats),
       limits: mapToObject(this.limits),
       locations: this.locations,
       user: this.user

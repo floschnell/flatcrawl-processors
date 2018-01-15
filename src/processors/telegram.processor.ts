@@ -4,17 +4,13 @@ import * as Extra from 'telegraf/extra';
 import * as Markup from 'telegraf/markup';
 import * as session from 'telegraf/session';
 import * as Telegram from 'telegraf/telegram';
-
 import { Database } from '../data/firebase';
-
 import { Flat } from '../models/flat';
 import { ILimit, IUser, Search } from '../models/search';
-
 import { BOT_ID, BOT_TOKEN } from '../config';
-
 import { Processor, IDirection } from './processor';
-
 import { getCoordsForAddress } from '../services/directions';
+import { mapToObject } from '../utils';
 
 const tlsOptions = {
   cert: fs.readFileSync('./certs/public.pem'),
@@ -66,6 +62,42 @@ const supportedTransportModes = [
 ];
 
 /**
+ * A user in the telegram context.
+ * We're adding a telegram id to the user.
+ */
+export interface ITelegramUser extends IUser {
+  telegramId: number;
+  name: string;
+}
+
+/**
+ * A search in the telegram context.
+ * We're adding the chats field to remember which chats we
+ * need to notify, once the search found a match.
+ */
+export class TelegramSearch extends Search {
+  public user: ITelegramUser;
+  public chats: Map<number, boolean>;
+
+  constructor({ limits = {}, locations = [], chats = {}, user = {} }) {
+    super({ limits, locations, user });
+
+    this.chats = new Map();
+    Object.keys(chats).forEach(uid => {
+      this.chats.set(parseInt(uid, 10), chats[uid]);
+    });
+  }
+
+  public toDb(): any {
+    const serializable = super.toDb();
+    return {
+      ...serializable,
+      chats: mapToObject(this.chats),
+    };
+  }
+}
+
+/**
  * This processor runs a telegram bot interface.
  * People can contact it via the app and create search requests.
  * Once matching flats have been found they will immediately receive
@@ -77,6 +109,9 @@ export class TelegramProcessor extends Processor {
   private telegram: any = null;
   private telegraf: any = null;
 
+  /**
+   * @inheritDoc
+   */
   protected onStartup(database: Database) {
 
     this.dbConnection = database;
@@ -126,7 +161,10 @@ export class TelegramProcessor extends Processor {
     });
   }
 
-  protected onNewMatchingFlat(flat: Flat, search: Search, directions: IDirection[]) {
+  /**
+   * @inheritDoc
+   */
+  protected onNewMatchingFlat(flat: Flat, search: TelegramSearch, directions: IDirection[]) {
     console.log('sending info message to chats now!');
     search.chats.forEach(async (enabled, chatId) => {
       if (enabled) {
@@ -146,9 +184,10 @@ export class TelegramProcessor extends Processor {
     ctx.session.step = 'limit:rent';
     ctx.session.search = new Search({
       user: {
-        id: ctx.from.id,
+        id: `telegram-${ctx.from.id}`,
+        telegramId: ctx.from.id,
         name: ctx.from.username
-      } as IUser
+      } as ITelegramUser
     });
     await this.telegram.sendMessage(
       ctx.chat.id,
@@ -652,8 +691,10 @@ export class TelegramProcessor extends Processor {
       message.push(`Sorry, I could not calculate any trip times for this flat.`);
     }
 
-    await this.telegram.sendMessage(chat.id, message.join('\n'), {
-      parse_mode: 'Markdown'
-    });
+    console.log(message);
+
+    // await this.telegram.sendMessage(chat.id, message.join('\n'), {
+    //   parse_mode: 'Markdown'
+    // });
   }
 }

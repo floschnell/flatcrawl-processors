@@ -27,7 +27,6 @@ export abstract class Processor {
     Processor._searchesCreated = 0;
     Processor._runningSince = new Date();
     Processor._flatsChecked = 0;
-    Processor.processors = new Array<Processor>();
     Processor.dbConnection = new Database();
 
     Processor.dbConnection.onSearchAdded.subscribe(event => {
@@ -84,7 +83,7 @@ export abstract class Processor {
 
   private static searches: Map<string, Search> = null;
   private static initialized: boolean = false;
-  private static processors: Processor[] = null;
+  private static processors: Processor[] = new Array();
   private static dbConnection: Database = null;
   private static _searchesCreated: number = 0;
   private static _flatsChecked: number = 0;
@@ -108,20 +107,9 @@ export abstract class Processor {
   }
 
   private static async checkSearch(search: Search, flat: Flat) {
-    const hasActiveChats = (inSearch: Search): boolean => {
-      let hasActive = false;
-      inSearch.chats.forEach(active => {
-        if (active) {
-          hasActive = true;
-        }
-      });
-      return hasActive;
-    };
-
-    if (hasActiveChats(search) && evaluateFlat(search, flat)) {
+    if (evaluateFlat(search, flat)) {
       console.log(
         'found relevant flat for search',
-        search.user.id,
         search.user.name,
         '- calculating directions ...'
       );
