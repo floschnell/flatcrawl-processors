@@ -11,6 +11,7 @@ import { BOT_ID, BOT_TOKEN } from '../config';
 import { Processor, IDirection } from './processor';
 import { getCoordsForAddress } from '../services/directions';
 import { mapToObject } from '../utils';
+import { City } from '../models/city';
 
 const tlsOptions = {
   cert: fs.readFileSync('./certs/public.pem'),
@@ -41,6 +42,9 @@ function question(ctx, forceReply = true) {
     reply_to_message_id: ctx.message.message_id
   };
 }
+
+const availableCities = Object.keys(City)
+  .filter((key) => isNaN(Number(key)));
 
 const supportedTransportModes = [
   {
@@ -79,8 +83,8 @@ export class TelegramSearch extends Search {
   public user: ITelegramUser;
   public chats: Map<number, boolean>;
 
-  constructor({ limits = {}, locations = [], chats = {}, user = {} }) {
-    super({ limits, locations, user });
+  constructor({ city, limits = {}, locations = [], chats = {}, user = null }) {
+    super({ city, limits, locations, user });
 
     this.chats = new Map();
     Object.keys(chats).forEach(uid => {
@@ -126,7 +130,7 @@ export class TelegramProcessor extends Processor {
     });
 
     // Start https webhook
-    this.telegraf.startWebhook('/telegram-webhook', tlsOptions, 8443)
+    this.telegraf.startWebhook('/telegram-webhook', tlsOptions, 8443);
 
     // register search command
     this.telegraf.command(['search', `search@${BOT_ID}`], async ctx => {
@@ -165,51 +169,55 @@ export class TelegramProcessor extends Processor {
    * @inheritDoc
    */
   protected onNewMatchingFlat(flat: Flat, search: TelegramSearch, directions: IDirection[]) {
-    console.log('sending info message to chats now!');
-    search.chats.forEach(async (enabled, chatId) => {
-      if (enabled) {
-        try {
-          this.sendFlatToChat(flat, directions, chatId);
-        } catch (e) {
-          console.error('could not send flat to chat, because:', e);
+    if (search.chats) {
+      console.log(`sending info message to chats from ${search.user.name} now!`);
+      search.chats.forEach(async (enabled, chatId) => {
+        if (enabled) {
+          try {
+            this.sendFlatToChat(flat, directions, chatId);
+          } catch (e) {
+            console.error('could not send flat to chat, because:', e);
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   private async search(ctx: any) {
     console.log('received command');
 
     ctx.session.intent = 'create';
-    ctx.session.step = 'limit:rent';
+    ctx.session.step = 'city:set';
     ctx.session.search = new Search({
       user: {
-        id: `telegram-${ctx.from.id}`,
-        telegramId: ctx.from.id,
-        name: ctx.from.username
-      } as ITelegramUser
+        id: ctx.from.id,
+        name: ctx.from.username,
+      },
+      city: null,
+      locations: [],
+      limits: {},
     });
     await this.telegram.sendMessage(
       ctx.chat.id,
-      'Ok, so you are looking for a new flat?'
+      'Ok, so you are looking for a new flat?',
     );
     await pause(500);
     await this.telegram.sendMessage(
       ctx.chat.id,
-      'First, I will collect some search criteria.'
+      'To find the perfect flat, I need to know a few more information from you.',
     );
     await pause(500);
     await this.telegram.sendMessage(
       ctx.chat.id,
-      'I need you to specify the criteria in the format "[min]-[max]". You can leave out either min or max for no limit.'
-    );
-    await pause(500);
-    await this.telegram.sendMessage(
-      ctx.chat.id,
-      `How many Euro would you like to spend per month ${mentionSender(ctx)}?`,
+      `First of all, please tell me, ${mentionSender(ctx)}, in which city are you looking for a flat?`,
       {
         parse_mode: 'markdown',
-        reply_markup: { force_reply: true, selective: true }
+        reply_markup: {
+          keyboard: availableCities.map((city) => [city]),
+          one_time_keyboard: true,
+          resize_keyboard: true,
+          selective: true
+        }
       }
     );
   }
@@ -220,7 +228,7 @@ export class TelegramProcessor extends Processor {
 
     if (params.length > 1) {
       const searchName = params[1];
-      const searchId = ctx.from.id + '-' + searchName;
+      const searchId = `${ctx.from.id}-${searchName}`;
       const searchExists = await this.dbConnection.searchExists(searchId);
 
       try {
@@ -246,7 +254,7 @@ export class TelegramProcessor extends Processor {
 
     if (params.length > 1) {
       const searchName = params[1];
-      const searchId = ctx.from.id + '-' + searchName;
+      const searchId = `${ctx.from.id}-${searchName}`;
 
       this.dbConnection.searchExists(searchId).then(exists => {
         if (exists) {
@@ -315,7 +323,42 @@ export class TelegramProcessor extends Processor {
       const stepName = step[0];
       let msg = [];
 
-      if (stepName === 'limit') {
+      if (stepName === 'city') { // --- CITY ---
+        const city = ctx.message.text.trim();
+
+        if (City[city] != null) {
+          ctx.session.search.city = City[city];
+          await this.telegram.sendMessage(
+            ctx.chat.id,
+            'Next, please provide me with some limits in the format "[min]-[max]". You can leave out either min or max for no limit.'
+          );
+          await pause(500);
+          await this.telegram.sendMessage(
+            ctx.chat.id,
+            `How many Euro would you like to spend per month ${mentionSender(ctx)}?`,
+            {
+              parse_mode: 'markdown',
+              reply_markup: { force_reply: true, selective: true }
+            }
+          );
+          ctx.session.step = 'limit:rent';
+        } else { // did not understand city
+          await this.telegram.sendMessage(
+            ctx.chat.id,
+            `Sorry ${mentionSender(ctx)}, I do not have "${city}" on my list. Please choose one of the list.`,
+            {
+              parse_mode: 'markdown',
+              reply_markup: {
+                keyboard: availableCities.map((city) => [city]),
+                one_time_keyboard: true,
+                resize_keyboard: true,
+                selective: true,
+              },
+            }
+          );
+        }
+
+      } else if (stepName === 'limit') { // --- LIMITS ---
         const limitName = step[1];
         const limits = ctx.message.text.match(/(\d+)?\s?-\s?(\d+)?/);
         msg = ['Thank you!'];
@@ -356,7 +399,7 @@ export class TelegramProcessor extends Processor {
 
           await pause(1000);
 
-          if (limitName === 'rent') {
+          if (limitName === 'rent') {  // --- RENT ---
             ctx.session.step = 'limit:squaremeters';
 
             await this.telegram.sendMessage(
@@ -369,7 +412,8 @@ export class TelegramProcessor extends Processor {
                 reply_markup: { force_reply: true, selective: true }
               }
             );
-          } else if (limitName === 'squaremeters') {
+
+          } else if (limitName === 'squaremeters') { // --- SQUAREMETERS ---
             ctx.session.step = 'limit:rooms';
 
             await this.telegram.sendMessage(
@@ -382,7 +426,8 @@ export class TelegramProcessor extends Processor {
                 reply_markup: { force_reply: true, selective: true }
               }
             );
-          } else if (limitName === 'rooms') {
+
+          } else if (limitName === 'rooms') { // --- ROOMS ---
             ctx.session.step = 'locations:continue';
 
             await this.telegram.sendMessage(
@@ -415,7 +460,8 @@ export class TelegramProcessor extends Processor {
             );
           }
         }
-      } else if (stepName === 'locations') {
+
+      } else if (stepName === 'locations') { // --- LOCATIONS ---
         const substep = step[1];
 
         if (substep === 'add') {
@@ -503,7 +549,8 @@ export class TelegramProcessor extends Processor {
               }
             );
           }
-        } else if (substep === 'transport') {
+
+        } else if (substep === 'transport') { // --- TRANSPORT ---
           ctx.session.location.name = ctx.message.text.trim();
           ctx.session.step = 'locations:finish';
 
@@ -521,7 +568,7 @@ export class TelegramProcessor extends Processor {
               }
             }
           );
-        } else if (substep === 'finish') {
+        } else if (substep === 'finish') { // --- SAVE ---
           const receivedMode = ctx.message.text.trim();
           const chosenMode = supportedTransportModes
             .filter(transport => transport.name === receivedMode)
@@ -691,10 +738,8 @@ export class TelegramProcessor extends Processor {
       message.push(`Sorry, I could not calculate any trip times for this flat.`);
     }
 
-    console.log(message);
-
-    // await this.telegram.sendMessage(chat.id, message.join('\n'), {
-    //   parse_mode: 'Markdown'
-    // });
+    await this.telegram.sendMessage(chat.id, message.join('\n'), {
+      parse_mode: 'Markdown'
+    });
   }
 }

@@ -1,5 +1,6 @@
 import { mapToObject } from '../utils';
 import { Location } from './location';
+import { City } from './city';
 
 export interface IUser {
   id: string;
@@ -12,11 +13,18 @@ export interface ILimit {
 }
 
 export class Search {
+  public city: City;
   public user: IUser;
   public locations: Location[];
   public limits: Map<string, ILimit>;
 
-  constructor({ limits = {}, locations = [], user = {} }) {
+  constructor({
+    city, limits = {}, locations = [], user,
+  }: {
+      city: string, limits: { [limit: string]: { min: number, max: number } },
+      locations: Location[], user: IUser,
+    }) {
+    this.city = City[city];
     this.locations = locations.map(location => new Location(location));
 
     this.limits = new Map();
@@ -27,12 +35,13 @@ export class Search {
       });
     });
 
-    this.user = user as IUser;
+    this.user = user;
     this.user.name = this.user.name || null;
   }
 
   public toDb(): any {
     return {
+      city: City[this.city],
       limits: mapToObject(this.limits),
       locations: this.locations,
       user: this.user

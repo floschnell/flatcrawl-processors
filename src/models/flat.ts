@@ -1,3 +1,4 @@
+import { City } from "./city";
 
 /**
  * This represents a flat as it will be stored in our database.
@@ -5,6 +6,7 @@
  * @class Flat
  */
 export class Flat {
+    public city: City;
     public source: string;
     public externalid: string;
     public title: string;
@@ -14,7 +16,26 @@ export class Flat {
     public rooms: number;
     public date: Date;
 
-    constructor({ source, date, data: { externalid, title, address, rent, squaremeters, rooms } }) {
+    constructor(
+        { city, source, date, data: {
+            externalid,
+            title,
+            address,
+            rent,
+            squaremeters,
+            rooms
+        }
+        }: {
+            city: string, source: string, date: number, data: {
+                externalid: string,
+                title: string,
+                address: string,
+                rent: number,
+                squaremeters: number,
+                rooms: number
+            }
+            }) {
+        this.city = City[city];
         this.source = source;
         this.externalid = externalid;
         this.title = title.trim();

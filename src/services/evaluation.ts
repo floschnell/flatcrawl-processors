@@ -7,7 +7,7 @@ import { Search } from '../models/search.js';
  * @return boolean Whether the flat satisfies the client's wishes.
  */
 export function evaluateFlat(search: Search, flat: Flat): boolean {
-  let satisfied = true;
+  let satisfied = flat.city === search.city;
   search.limits.forEach((limit, attribute) => {
     const value = parseInt(flat[attribute], 10);
 

@@ -29,6 +29,10 @@ export abstract class Processor {
     Processor._flatsChecked = 0;
     Processor.dbConnection = new Database();
 
+    this.processors.forEach((processor) => {
+      processor.onStartup(Processor.dbConnection);
+    });
+
     Processor.dbConnection.onSearchAdded.subscribe(event => {
       if (Processor.initialized) {
         Processor._searchesCreated++;
