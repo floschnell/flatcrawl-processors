@@ -29,7 +29,7 @@ export abstract class Processor {
     Processor._flatsChecked = 0;
     Processor.dbConnection = new Database();
 
-    this.processors.forEach((processor) => {
+    Processor.processors.forEach((processor) => {
       processor.onStartup(Processor.dbConnection);
     });
 
@@ -127,27 +127,27 @@ export abstract class Processor {
       console.log('done.');
 
       // notify each processor of new flat
-      for (const processor of Processor.processors) {
+      Processor.processors.forEach((processor) => {
         processor.onNewMatchingFlat(flat, search, directions);
-      }
+      });
     }
     Processor._lastCheck = new Date();
   }
 
-  private static calculateDirections(
+  private static async calculateDirections(
     search: Search,
     flat: Flat
   ): Promise<IDirection[]> {
-    return getCoordsForAddress(flat.address).then(flatGeo =>
-      Promise.all(
-        search.locations.map(
-          async location =>
-            ({
-              leg: await getDirections(location.geo, flatGeo, location.transport),
-              targetName: location.name,
-              transport: location.transport
-            } as IDirection)
-        )
+    const flatGeo = await getCoordsForAddress(flat.address);
+
+    return Promise.all(
+      search.locations.map(
+        async location =>
+          ({
+            leg: await getDirections(location.geo, flatGeo, location.transport),
+            targetName: location.name,
+            transport: location.transport
+          }),
       )
     );
   }

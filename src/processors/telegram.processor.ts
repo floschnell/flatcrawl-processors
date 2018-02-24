@@ -66,42 +66,6 @@ const supportedTransportModes = [
 ];
 
 /**
- * A user in the telegram context.
- * We're adding a telegram id to the user.
- */
-export interface ITelegramUser extends IUser {
-  telegramId: number;
-  name: string;
-}
-
-/**
- * A search in the telegram context.
- * We're adding the chats field to remember which chats we
- * need to notify, once the search found a match.
- */
-export class TelegramSearch extends Search {
-  public user: ITelegramUser;
-  public chats: Map<number, boolean>;
-
-  constructor({ city, limits = {}, locations = [], chats = {}, user = null }) {
-    super({ city, limits, locations, user });
-
-    this.chats = new Map();
-    Object.keys(chats).forEach(uid => {
-      this.chats.set(parseInt(uid, 10), chats[uid]);
-    });
-  }
-
-  public toDb(): any {
-    const serializable = super.toDb();
-    return {
-      ...serializable,
-      chats: mapToObject(this.chats),
-    };
-  }
-}
-
-/**
  * This processor runs a telegram bot interface.
  * People can contact it via the app and create search requests.
  * Once matching flats have been found they will immediately receive
@@ -168,9 +132,9 @@ export class TelegramProcessor extends Processor {
   /**
    * @inheritDoc
    */
-  protected onNewMatchingFlat(flat: Flat, search: TelegramSearch, directions: IDirection[]) {
+  protected onNewMatchingFlat(flat: Flat, search: Search, directions: IDirection[]) {
+    console.log(`sending info message to chats from ${search.user.name}:`, search.chats);
     if (search.chats) {
-      console.log(`sending info message to chats from ${search.user.name} now!`);
       search.chats.forEach(async (enabled, chatId) => {
         if (enabled) {
           try {
@@ -196,6 +160,7 @@ export class TelegramProcessor extends Processor {
       city: null,
       locations: [],
       limits: {},
+      chats: {},
     });
     await this.telegram.sendMessage(
       ctx.chat.id,
@@ -244,7 +209,24 @@ export class TelegramProcessor extends Processor {
         return ctx.reply(`I am confused. Please try again later.`);
       }
     } else {
-      ctx.reply(`Please provide me the search ID that you want to subscribe to.`);
+      const searches = await this.dbConnection.getSearchesForUser({
+        id: ctx.from.id,
+        name: ctx.from.username,
+      });
+      const unsubscribed = searches.filter(
+        search => !(search.chats.has(chat.id) && search.chats.get(chat.id)),
+      );
+      const unsubscribedIds = unsubscribed.map(search => search.id.split("-")[1]);
+      ctx.reply(`${mentionSender(ctx)}, which of your searches do you want to subscribe to?`,
+        {
+          parse_mode: 'markdown',
+          reply_markup: {
+            keyboard: unsubscribedIds.map((id) => [`/subscribe ${id}`]),
+            one_time_keyboard: true,
+            resize_keyboard: true,
+            selective: true
+          }
+        });
     }
   }
 
@@ -268,9 +250,24 @@ export class TelegramProcessor extends Processor {
         }
       });
     } else {
-      ctx.reply(
-        `Please provide me the search ID that you want to unsubscribe from.`
+      const searches = await this.dbConnection.getSearchesForUser({
+        id: ctx.from.id,
+        name: ctx.from.username,
+      });
+      const subscribed = searches.filter(
+        search => search.chats.has(chat.id) && search.chats.get(chat.id),
       );
+      const subscribedIds = subscribed.map(search => search.id.split("-")[1]);
+      ctx.reply(`${mentionSender(ctx)}, which of your subscriptions do you want to cancel?`,
+        {
+          parse_mode: 'markdown',
+          reply_markup: {
+            keyboard: subscribedIds.map((id) => [`/unsubscribe ${id}`]),
+            one_time_keyboard: true,
+            resize_keyboard: true,
+            selective: true
+          }
+        });
     }
   }
 

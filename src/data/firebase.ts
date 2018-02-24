@@ -1,6 +1,6 @@
 import * as firebase from 'firebase';
 import { Flat } from '../models/flat';
-import { Search } from '../models/search';
+import { Search, IUser } from '../models/search';
 
 import { Observable } from 'rxjs';
 
@@ -121,6 +121,20 @@ export class Database {
         resolve(mapOfSearches);
       });
     });
+  }
+
+  public getSearchesForUser(user: IUser): Promise<Search[]> {
+    return new Promise(resolve => {
+      const searchesRef = this.database.ref('searches')
+        .orderByKey()
+        .startAt(user.id + "-1")
+        .endAt(user.id + "-\uffff")
+        .on("value", (snapshot) => {
+          const results: { [searchId: string]: any } = snapshot.val();
+          const searches = Object.keys(results).map(searchId => new Search(results[searchId], searchId));
+          resolve(searches);
+        })
+    })
   }
 
   public async saveSearch(search: Search): Promise<number> {

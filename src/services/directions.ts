@@ -51,23 +51,19 @@ export function getCoordsForAddress(address): Promise<ILocation> {
   });
 }
 
-export function getDirections(origin, destination, mode): Promise<ILeg> {
-  return new Promise((resolve, reject) => {
-    mapsClient
-      .directions({
-        destination,
-        mode,
-        origin
-      })
-      .asPromise()
-      .then(response => {
-        if (response.json.routes.length > 0) {
-          const route = response.json.routes[0];
+export async function getDirections(origin, destination, mode): Promise<ILeg> {
+  const directions = await mapsClient
+    .directions({
+      destination,
+      mode,
+      origin
+    })
+    .asPromise();
 
-          resolve(route.legs[0] as ILeg);
-        } else {
-          reject("Could not calculate directions.");
-        }
-      });
-  });
+  if (directions.json.routes.length > 0) {
+    const route = directions.json.routes[0];
+    return route.legs[0];
+  } else {
+    throw new Error("Could not calculate directions.");
+  }
 }

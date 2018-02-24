@@ -13,17 +13,20 @@ export interface ILimit {
 }
 
 export class Search {
+  public id: string;
   public city: City;
   public user: IUser;
   public locations: Location[];
   public limits: Map<string, ILimit>;
+  public chats: Map<number, boolean>;
 
   constructor({
-    city, limits = {}, locations = [], user,
+    city, chats = {}, limits = {}, locations = [], user,
   }: {
-      city: string, limits: { [limit: string]: { min: number, max: number } },
+      city: string, chats: any, limits: { [limit: string]: { min: number, max: number } },
       locations: Location[], user: IUser,
-    }) {
+    }, id: string = null) {
+    this.id = id;
     this.city = City[city];
     this.locations = locations.map(location => new Location(location));
 
@@ -35,6 +38,11 @@ export class Search {
       });
     });
 
+    this.chats = new Map();
+    Object.keys(chats).forEach(uid => {
+      this.chats.set(parseInt(uid, 10), chats[uid]);
+    });
+
     this.user = user;
     this.user.name = this.user.name || null;
   }
@@ -44,7 +52,8 @@ export class Search {
       city: City[this.city],
       limits: mapToObject(this.limits),
       locations: this.locations,
-      user: this.user
+      user: this.user,
+      chats: mapToObject(this.chats),
     };
   }
 }

@@ -1,5 +1,6 @@
 import { Flat } from '../models/flat.js';
 import { Search } from '../models/search.js';
+import { City } from '../models/city.js';
 
 /**
  * Checks whether a certain flat is worth sending to a client.
@@ -8,6 +9,7 @@ import { Search } from '../models/search.js';
  */
 export function evaluateFlat(search: Search, flat: Flat): boolean {
   let satisfied = flat.city === search.city;
+  console.log(`user searches in ${City[search.city]} and flat is in ${City[flat.city]}`);
   search.limits.forEach((limit, attribute) => {
     const value = parseInt(flat[attribute], 10);
 
