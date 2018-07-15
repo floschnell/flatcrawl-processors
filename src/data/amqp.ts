@@ -9,18 +9,26 @@ import { Flat } from '../models/flat';
 
 import { Observable } from 'rxjs';
 
-const promisedChannel: Promise<any> = amqp.connect({
-  hostname: AMQP_HOST,
-  password: AMQP_PASSWORD,
-  port: 5672,
-  protocol: 'amqp',
-  username: AMQP_USERNAME,
-}).then((connection) => {
-  return connection.createChannel();
-});
+function connectToAMQP() {
+  console.log("Trying to connect to", AMQP_HOST);
+  return amqp.connect({
+    hostname: AMQP_HOST,
+    password: AMQP_PASSWORD,
+    port: 5672,
+    protocol: 'amqp',
+    username: AMQP_USERNAME,
+  }).then((connection) => {
+    console.log("Connected to", AMQP_HOST);
+    return connection.createChannel();
+  }).catch(async () => {
+    console.warn("Connection to", AMQP_HOST, "failed, trying to connect again ...");
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    return connectToAMQP();
+  });
+}
 
 export const onNewFlat: Observable<Flat> = Observable.create(observer => {
-  promisedChannel.then(channel => {
+  connectToAMQP().then(channel => {
     channel.assertQueue(AMQP_QUEUE, {
       autoDelete: false,
       durable: true,

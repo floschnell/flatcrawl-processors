@@ -1,4 +1,5 @@
 import * as googleMaps from '@google/maps';
+import * as rp from 'request-promise';
 
 import { GOOGLE_API_KEY } from '../config';
 
@@ -16,13 +17,8 @@ export interface IStep {
 }
 
 export interface ILeg {
-  steps: IStep[];
-  start_location: ILocation;
-  end_location: ILocation;
   duration: { value: number; text: string };
   distance: { value: number; text: string };
-  start_address: string;
-  end_address: string;
 }
 
 const mapsClient = googleMaps.createClient({
@@ -51,18 +47,27 @@ export function getCoordsForAddress(address): Promise<ILocation> {
   });
 }
 
-export async function getDirections(origin, destination, mode): Promise<ILeg> {
-  const directions = await mapsClient
-    .directions({
-      destination,
-      mode,
-      origin
-    })
-    .asPromise();
+export async function getDirections(origin: { lat: number, lng: number }, destination: { lat: number, lng: number }, mode): Promise<ILeg> {
+  const transport = {
+    "walking": "foot",
+    "driving": "car",
+    "bicycling": "bicycle",
+    "transit": "bicycle",
+  }[mode];
+  const response = await rp(`http://routing-${transport}:5000/route/v1/${transport}/${origin.lng},${origin.lat};${destination.lng},${destination.lat}`)
+  const directions = JSON.parse(response);
 
-  if (directions.json.routes.length > 0) {
-    const route = directions.json.routes[0];
-    return route.legs[0];
+  if (directions.routes.length > 0) {
+    return {
+      duration: {
+        value: directions.routes[0].duration,
+        text: Math.round(directions.routes[0].duration / 60) + " min",
+      },
+      distance: {
+        value: directions.routes[0].distance,
+        text: Math.round(directions.routes[0].distance / 1000) + " km",
+      }
+    };
   } else {
     throw new Error("Could not calculate directions.");
   }

@@ -1,0 +1,39 @@
+version: "3"
+services:
+
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - "5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER
+      - RABBITMQ_DEFAULT_PASS 
+
+  flatcrawl:
+    image: floschnell/flatcrawl:latest
+    depends_on:
+      - rabbitmq
+  
+  routing-car:
+    image: osrm/osrm-backend
+    command: osrm-routed --algorithm mld /data/bayern-latest.osrm
+    volumes:
+      - /opt/osm/car:/data
+    ports:
+      - "5000:5000"
+
+  routing-bicycle:
+    image: osrm/osrm-backend
+    command: osrm-routed --algorithm mld /data/bayern-latest.osrm
+    volumes:
+      - /opt/osm/bicycle:/data
+    ports:
+      - "5001:5000"
+
+  routing-foot:
+    image: osrm/osrm-backend
+    command: osrm-routed --algorithm mld /data/bayern-latest.osrm
+    volumes:
+      - /opt/osm/foot:/data
+    ports:
+      - "5002:5000"

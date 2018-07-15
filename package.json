@@ -9,6 +9,8 @@
     "https": "^1.0.0",
     "iconv-lite": "^0.4.19",
     "jsdom": "^11.3.0",
+    "request": "^2.87.0",
+    "request-promise": "^4.2.2",
     "rxjs": "^5.5.2",
     "telegraf": "^3.15.3"
   },
@@ -18,7 +20,7 @@
     "eslint-config-google": "^0.9.1",
     "tslint": "^5.8.0",
     "tslint-config-prettier": "^1.6.0",
-    "typescript": "^2.6.1"
+    "typescript": "^2.9.2"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
