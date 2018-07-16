@@ -1,16 +1,13 @@
 import * as fs from 'fs';
 import * as Telegraf from 'telegraf';
-import * as Extra from 'telegraf/extra';
-import * as Markup from 'telegraf/markup';
 import * as session from 'telegraf/session';
 import * as Telegram from 'telegraf/telegram';
 import { Database } from '../data/firebase';
 import { Flat } from '../models/flat';
-import { ILimit, IUser, Search } from '../models/search';
+import { ILimit, Search } from '../models/search';
 import { BOT_ID, BOT_TOKEN } from '../config';
 import { Processor, IDirection } from './processor';
 import { getCoordsForAddress } from '../services/directions';
-import { mapToObject } from '../utils';
 import { City } from '../models/city';
 
 const tlsOptions = {

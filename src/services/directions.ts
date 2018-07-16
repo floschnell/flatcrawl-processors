@@ -26,25 +26,23 @@ const mapsClient = googleMaps.createClient({
   key: GOOGLE_API_KEY,
 });
 
-export function getCoordsForAddress(address): Promise<ILocation> {
-  return new Promise((resolve, reject) => {
-    mapsClient
-      .geocode({
-        address
-      })
-      .asPromise()
-      .then(response => {
-        const results = response.json.results;
-
-        if (results.length > 0) {
-          const result = results[0];
-
-          resolve(result.geometry.location);
-        } else {
-          reject("Could not resolve address.");
-        }
-      });
-  });
+export async function getCoordsForAddress(address): Promise<ILocation> {
+  const options = {
+    uri: `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json`,
+    headers: {
+      'User-Agent': 'FlatCrawl (floschnell@gmail.com)'
+    },
+    json: true,
+  };
+  const results = await rp(options);
+  if (results.length > 0) {
+    return {
+      lat: results[0].lat,
+      lng: results[0].lon,
+    };
+  } else {
+    return null;
+  }
 }
 
 export async function getDirections(origin: { lat: number, lng: number }, destination: { lat: number, lng: number }, mode): Promise<ILeg> {
