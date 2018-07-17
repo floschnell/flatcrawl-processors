@@ -3,12 +3,9 @@
   "version": "1.0.0",
   "description": "Flatcrawl makes it easy to search for flats! It collects flats from different rental sites and exposes them in a consistent shape. Furthermore it lets you define custom searches through a Telegram bot that sends instant messages on new matches.",
   "dependencies": {
-    "@google/maps": "^0.4.5",
     "amqplib": "^0.5.2",
     "firebase": "^3.9.0",
     "https": "^1.0.0",
-    "iconv-lite": "^0.4.19",
-    "jsdom": "^11.3.0",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
     "rxjs": "^5.5.2",

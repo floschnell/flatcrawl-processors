@@ -11,8 +11,8 @@ services:
 
   flatcrawl:
     image: floschnell/flatcrawl:latest
-    depends_on:
-      - rabbitmq
+    ports:
+      - "8443:8443"
   
   routing-car:
     image: osrm/osrm-backend
