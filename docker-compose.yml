@@ -2,17 +2,29 @@ version: "3"
 services:
 
   rabbitmq:
-    image: rabbitmq
+    image: rabbitmq:3.7.7-management
     ports:
       - "5672:5672"
+      - 18080:15672
     environment:
       - RABBITMQ_DEFAULT_USER
-      - RABBITMQ_DEFAULT_PASS 
+      - RABBITMQ_DEFAULT_PASS
+    restart: on-failure
+
+  nominatim:
+    image: nominatim
+    command: sh /app/start.sh
+    ports:
+      - 6432:5432
+      - 7070:8080
+    volumes:
+      - /root/geodata/postgresdata:/var/lib/postgresql/9.5/main
 
   flatcrawl:
     image: floschnell/flatcrawl:latest
     ports:
       - "8443:8443"
+    restart: on-failure
   
   routing-car:
     image: osrm/osrm-backend
