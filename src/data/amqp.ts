@@ -29,17 +29,23 @@ function connectToAMQP() {
 
 export const onNewFlat: Observable<Flat> = Observable.create(observer => {
   connectToAMQP().then(channel => {
-    channel.assertQueue(AMQP_QUEUE, {
-      autoDelete: false,
-      durable: true,
-      exclusive: false,
-    }).then(exists => {
-      channel.consume(AMQP_QUEUE, (message) => {
-        const content = JSON.parse(message.content.toString('utf-8'));
-        const flat = new Flat(content);
-        observer.next(flat);
-        channel.ack(message);
+    channel.assertExchange("flats_exchange", "fanout", {
+      durable: false,
+    }).then(() => {
+      channel.assertQueue(AMQP_QUEUE, {
+        autoDelete: false,
+        durable: true,
+        exclusive: false,
+      }).then(() => {
+        channel.bindQueue(AMQP_QUEUE, "flats_exchange", "").then(() => {
+          channel.consume(AMQP_QUEUE, (message) => {
+            const content = JSON.parse(message.content.toString('utf-8'));
+            const flat = new Flat(content);
+            observer.next(flat);
+            channel.ack(message);
+          });
+        });
       });
     });
-  })
+  });
 });
