@@ -1,14 +1,10 @@
 import * as rp from 'request-promise';
-
-export interface ILocation {
-  lat: number;
-  lng: number;
-}
+import { IGeo } from '../models/location';
 
 export interface IStep {
   travel_mode: string;
-  start_location: ILocation;
-  end_location: ILocation;
+  start_location: IGeo;
+  end_location: IGeo;
   duration: { value: number; text: string };
   distance: { value: number; text: string };
 }
@@ -18,9 +14,9 @@ export interface ILeg {
   distance: { value: number; text: string };
 }
 
-const addressCache = new Map<string, ILocation>();
+const addressCache = new Map<string, IGeo>();
 
-export async function getCoordsForAddress(address): Promise<ILocation> {
+export async function getCoordsForAddress(address): Promise<IGeo> {
   if (addressCache.has(address)) {
     console.log("used address", address, "from cache.");
     return addressCache.get(address);
@@ -49,7 +45,7 @@ export async function getCoordsForAddress(address): Promise<ILocation> {
   }
 }
 
-export async function getDirections(origin: ILocation, destination: ILocation, mode): Promise<ILeg> {
+export async function getDirections(origin: IGeo, destination: IGeo, mode): Promise<ILeg> {
   const transport = {
     "walking": "foot",
     "driving": "car",

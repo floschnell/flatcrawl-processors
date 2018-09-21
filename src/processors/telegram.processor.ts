@@ -5,7 +5,7 @@ import * as Telegram from 'telegraf/telegram';
 import { Database } from '../data/firebase';
 import { Flat } from '../models/flat';
 import { ILimit, Search } from '../models/search';
-import { BOT_ID, BOT_TOKEN } from '../config';
+import { BOT_ID, BOT_TOKEN, TEST } from '../config';
 import { Processor, IDirection } from './processor';
 import { getCoordsForAddress } from '../services/directions';
 import { City } from '../models/city';
@@ -135,7 +135,9 @@ export class TelegramProcessor extends Processor {
       search.chats.forEach(async (enabled, chatId) => {
         if (enabled) {
           try {
-            this.sendFlatToChat(flat, directions, chatId);
+            if (!TEST) {
+              this.sendFlatToChat(flat, directions, chatId);
+            }
           } catch (e) {
             console.error('could not send flat to chat, because:', e);
           }

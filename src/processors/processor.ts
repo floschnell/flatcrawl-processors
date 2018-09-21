@@ -3,7 +3,6 @@ import { Database } from '../data/firebase';
 import { Flat } from "../models/flat";
 import { Search } from "../models/search";
 import {
-  getCoordsForAddress,
   getDirections,
   ILeg
 } from '../services/directions';
@@ -138,13 +137,11 @@ export abstract class Processor {
     search: Search,
     flat: Flat
   ): Promise<IDirection[]> {
-    const flatGeo = await getCoordsForAddress(flat.address);
-
     return Promise.all(
       search.locations.map(
         async location =>
           ({
-            leg: await getDirections(location.geo, flatGeo, location.transport),
+            leg: await getDirections(location.geo, flat.location, location.transport),
             targetName: location.name,
             transport: location.transport
           }),

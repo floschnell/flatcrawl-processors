@@ -2,8 +2,9 @@ import * as amqp from 'amqplib';
 import {
   AMQP_HOST,
   AMQP_PASSWORD,
-  AMQP_QUEUE,
+  AMQP_EXCHANGE,
   AMQP_USERNAME,
+  TEST,
 } from '../config';
 import { Flat } from '../models/flat';
 
@@ -28,17 +29,18 @@ function connectToAMQP() {
 }
 
 export const onNewFlat: Observable<Flat> = Observable.create(observer => {
+  let exchange_name = `${TEST ? "test_" : ""}${AMQP_EXCHANGE}`;
   connectToAMQP().then(channel => {
-    channel.assertExchange("flats_exchange", "fanout", {
+    channel.assertExchange(exchange_name, "fanout", {
       durable: false,
     }).then(() => {
-      channel.assertQueue(AMQP_QUEUE, {
-        autoDelete: false,
-        durable: true,
-        exclusive: false,
-      }).then(() => {
-        channel.bindQueue(AMQP_QUEUE, "flats_exchange", "").then(() => {
-          channel.consume(AMQP_QUEUE, (message) => {
+      channel.assertQueue(null, {
+        autoDelete: true,
+        durable: false,
+        exclusive: true,
+      }).then((result) => {
+        channel.bindQueue(result.queue, exchange_name, "").then(() => {
+          channel.consume(result.queue, (message) => {
             const content = JSON.parse(message.content.toString('utf-8'));
             const flat = new Flat(content);
             observer.next(flat);
