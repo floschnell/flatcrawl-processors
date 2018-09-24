@@ -24,6 +24,11 @@ services:
     image: floschnell/flatcrawl:latest
     ports:
       - "8443:8443"
+    environment:
+      - FLATCRAWL_DATABASE_KEY
+      - FLATCRAWL_BOT_TOKEN
+      - RABBITMQ_DEFAULT_USER
+      - RABBITMQ_DEFAULT_PASS
     restart: on-failure
   
   routing-car:
