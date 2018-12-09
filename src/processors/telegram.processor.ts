@@ -623,8 +623,8 @@ export class TelegramProcessor extends Processor {
         } else if (substep === 'finish') {
           const time = /^any$|\s*(\d+)\smin\s*$/.exec(ctx.message.text);
           if (time != null && time.length === 2) {
-            if (time[1] === "any") {
-              ctx.session.location.limit = null;
+            if (time[0] === "any") {
+              ctx.session.location.limit = -1;
             } else {
               ctx.session.location.limit = parseInt(time[1]);
             }
