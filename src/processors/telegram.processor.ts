@@ -55,10 +55,6 @@ const supportedTransportModes = [
   {
     alias: 'driving',
     name: '🚗 Car'
-  },
-  {
-    alias: 'transit',
-    name: '🚇 Public'
   }
 ];
 
@@ -489,6 +485,7 @@ export class TelegramProcessor extends Processor {
               }
             );
           } catch (e) {
+            ctx.session.step = 'locations:add';
             console.error('Could not resolve given address to pair of coordinates.');
             await this.telegram.sendMessage(
               ctx.chat.id,
@@ -564,14 +561,14 @@ export class TelegramProcessor extends Processor {
               }
             }
           );
-        } else if (substep === 'finish') { // --- SAVE ---
+
+        } else if (substep === 'limit') {
           const receivedMode = ctx.message.text.trim();
           const chosenMode = supportedTransportModes
             .filter(transport => transport.name === receivedMode)
             .map(transport => transport.alias);
 
           if (chosenMode.length === 0) {
-            ctx.session.step = 'locations:finish';
 
             await this.telegram.sendMessage(
               ctx.chat.id,
@@ -598,6 +595,40 @@ export class TelegramProcessor extends Processor {
           } else {
             ctx.session.location.transport = chosenMode[0];
             ctx.session.search.locations.push(ctx.session.location);
+            ctx.session.step = 'locations:finish';
+
+            await this.telegram.sendMessage(
+              ctx.chat.id,
+              `I can only show you flats that are a certain distance away from ${ctx.session
+                .location.name}.`
+            );
+
+            await this.telegram.sendMessage(
+              ctx.chat.id,
+              `${mentionSender(
+                ctx
+              )}, what is the maximum time you would like to travel?`,
+              {
+                parse_mode: 'markdown',
+                reply_markup: {
+                  keyboard: [['10 min', '15 min', '20 min'], ['25 min', '30 min', 'any']],
+                  one_time_keyboard: true,
+                  resize_keyboard: true,
+                  selective: true
+                }
+              }
+            );
+          }
+
+        } else if (substep === 'finish') {
+          const time = /^any$|\s*(\d+)\smin\s*$/.exec(ctx.message.text);
+          if (time != null && time.length === 2) {
+            if (time[1] === "any") {
+              ctx.session.location.limit = null;
+            } else {
+              ctx.session.location.limit = parseInt(time[1]);
+            }
+            ctx.session.search.locations.push(ctx.session.location);
             ctx.session.step = 'locations:continue';
 
             await this.telegram.sendMessage(
@@ -620,7 +651,24 @@ export class TelegramProcessor extends Processor {
                 }
               }
             );
+          } else {
+            await this.telegram.sendMessage(
+              ctx.chat.id,
+              `${mentionSender(
+                ctx
+              )}, what is the maximum time you would like to travel?`,
+              {
+                parse_mode: 'markdown',
+                reply_markup: {
+                  keyboard: [['10 min', '15 min', '20 min'], ['25 min', '30 min', 'any']],
+                  one_time_keyboard: true,
+                  resize_keyboard: true,
+                  selective: true
+                }
+              }
+            );
           }
+
         } else if (substep === 'continue') {
           const response = ctx.message.text.trim().toLowerCase();
 

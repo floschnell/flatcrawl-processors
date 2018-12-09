@@ -32,7 +32,7 @@ services:
     restart: on-failure
   
   routing-car:
-    image: osrm/osrm-backend
+    image: osrm/osrm-backend:v5.18.0
     command: osrm-routed --algorithm mld /data/bayern-latest.osrm
     volumes:
       - /opt/osm/car:/data
@@ -40,7 +40,7 @@ services:
       - "5000:5000"
 
   routing-bicycle:
-    image: osrm/osrm-backend
+    image: osrm/osrm-backend:v5.18.0
     command: osrm-routed --algorithm mld /data/bayern-latest.osrm
     volumes:
       - /opt/osm/bicycle:/data
@@ -48,7 +48,7 @@ services:
       - "5001:5000"
 
   routing-foot:
-    image: osrm/osrm-backend
+    image: osrm/osrm-backend:v5.18.0
     command: osrm-routed --algorithm mld /data/bayern-latest.osrm
     volumes:
       - /opt/osm/foot:/data
