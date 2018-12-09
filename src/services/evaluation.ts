@@ -15,7 +15,8 @@ export async function evaluateFlat(search: Search, flat: Flat): Promise<boolean>
   }
 
   console.log(`user searches in ${City[search.city]} and flat is in ${City[flat.city]}`);
-  search.limits.forEach((limit, attribute) => {
+  for (const attribute in search.limits) {
+    const limit = search.limits[attribute];
     const value = parseInt(flat[attribute], 10);
 
     if (limit.min !== undefined && value < limit.min) {
@@ -47,7 +48,7 @@ export async function evaluateFlat(search: Search, flat: Flat): Promise<boolean>
         limit.max
       );
     }
-  });
+  }
 
   if (flat.location != null) {
     const travelTimeResults = await Promise.all(search.locations.map(async location => {
