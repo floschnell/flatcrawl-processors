@@ -545,7 +545,7 @@ export class TelegramProcessor extends Processor {
 
         } else if (substep === 'transport') { // --- TRANSPORT ---
           ctx.session.location.name = ctx.message.text.trim();
-          ctx.session.step = 'locations:finish';
+          ctx.session.step = 'locations:limit';
 
           await this.telegram.sendMessage(
             ctx.chat.id,
@@ -594,7 +594,6 @@ export class TelegramProcessor extends Processor {
             );
           } else {
             ctx.session.location.transport = chosenMode[0];
-            ctx.session.search.locations.push(ctx.session.location);
             ctx.session.step = 'locations:finish';
 
             await this.telegram.sendMessage(
