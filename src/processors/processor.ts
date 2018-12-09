@@ -110,7 +110,8 @@ export abstract class Processor {
   }
 
   private static async checkSearch(search: Search, flat: Flat) {
-    if (evaluateFlat(search, flat)) {
+    const flatIsMatch = await evaluateFlat(search, flat);
+    if (flatIsMatch) {
       console.log(
         'found relevant flat for search',
         search.user.name,

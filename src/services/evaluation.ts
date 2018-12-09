@@ -1,14 +1,19 @@
 import { Flat } from '../models/flat.js';
 import { Search } from '../models/search.js';
 import { City } from '../models/city.js';
+import { getDirections } from './directions.js';
 
 /**
  * Checks whether a certain flat is worth sending to a client.
  * 
  * @return boolean Whether the flat satisfies the client's wishes.
  */
-export function evaluateFlat(search: Search, flat: Flat): boolean {
-  let satisfied = flat.city === search.city;
+export async function evaluateFlat(search: Search, flat: Flat): Promise<boolean> {
+  if (flat.city !== search.city) {
+    console.log("city NOT satisfied:", flat.city, "is not equal to", search.city);
+    return false;
+  }
+
   console.log(`user searches in ${City[search.city]} and flat is in ${City[flat.city]}`);
   search.limits.forEach((limit, attribute) => {
     const value = parseInt(flat[attribute], 10);
@@ -16,21 +21,21 @@ export function evaluateFlat(search: Search, flat: Flat): boolean {
     if (limit.min !== undefined && value < limit.min) {
       console.log(
         attribute,
-        'not satisfied:',
+        'NOT satisfied:',
         value,
         'has been smaller than',
         limit.min
       );
-      satisfied = false;
+      return false;
     } else if (limit.max !== undefined && value > limit.max) {
       console.log(
         attribute,
-        'not satisfied:',
+        'NOT satisfied:',
         value,
         'has been bigger than',
         limit.max
       );
-      satisfied = false;
+      return false;
     } else {
       console.log(
         attribute,
@@ -43,5 +48,29 @@ export function evaluateFlat(search: Search, flat: Flat): boolean {
       );
     }
   });
-  return satisfied;
+
+  if (flat.location != null) {
+    const travelTimeResults = await Promise.all(search.locations.map(async location => {
+      if (location.limit != null && location.limit > 0) {
+        try {
+          console.log("Verifying travelling time constraint for search:", search.id);
+          const directions = await getDirections(flat.location, location.geo, location.transport);
+          if (directions.duration.value > location.limit) {
+            console.log("travel time NOT satisfied: maximum allowed", location.limit, "is bigger than", directions.duration.value);
+            return false;
+          }
+        } catch (e) {
+          console.error("Error while trying to validate travel time limit for flat.", e);
+        }
+      }
+      return true;
+    }));
+    if (travelTimeResults.some(satisfied => !satisfied)) {
+      return false;
+    } else {
+      console.log("travel times satisfied!");
+    }
+  }
+
+  return true;
 }
