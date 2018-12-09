@@ -17,7 +17,7 @@ export async function evaluateFlat(search: Search, flat: Flat): Promise<boolean>
   console.log(`user searches in ${City[search.city]} and flat is in ${City[flat.city]}`);
   for (const attribute in Array.from(search.limits)) {
     console.log("evaluating attribute", attribute);
-    const limit = search.limits[attribute];
+    const limit = search.limits.get(attribute);
     const value = parseInt(flat[attribute], 10);
 
     if (limit.min !== undefined && value < limit.min) {
