@@ -128,7 +128,12 @@ export abstract class Processor {
 
       // notify each processor of new flat
       Processor.processors.forEach((processor) => {
-        processor.onNewMatchingFlat(flat, search, directions);
+        try {
+          processor.onNewMatchingFlat(flat, search, directions);
+        } catch (e) {
+          console.warn("Error while processing a matching flat:", e);
+          console.warn("Will continue with next processor.");
+        }
       });
     }
     Processor._lastCheck = new Date();
