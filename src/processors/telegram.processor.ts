@@ -21,6 +21,7 @@ const crawlerUrls = {
   sueddeutsche: flat => `https://immobilienmarkt.sueddeutsche.de/Wohnungen/` +
     `mieten/Muenchen/Wohnung/${flat.externalid}?comeFromTL=1`,
   wggesucht: flat => `https://www.wg-gesucht.de/${flat.externalid}`,
+  wohnungsboerse: flat => `https://www.wohnungsboerse.net/immodetail/${flat.externalid}`,
 }
 
 function mentionSender(ctx) {
