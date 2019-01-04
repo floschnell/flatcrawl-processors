@@ -95,6 +95,11 @@ export class TelegramProcessor extends Processor {
       this.search(ctx);
     });
 
+    // register edit command
+    this.telegraf.command(['edit', `edit@${BOT_ID}`], async ctx => {
+      this.edit(ctx);
+    });
+
     // subscribes to updated of a certain search, which is given via its ID.
     this.telegraf.command(['subscribe', `subscribe@${BOT_ID}`], async ctx => {
       this.subscribe(ctx);
@@ -108,6 +113,11 @@ export class TelegramProcessor extends Processor {
     // shows all the subscriptions for a certain channel, that we get from context
     this.telegraf.command(['subscriptions', `subscriptions@${BOT_ID}`], ctx => {
       this.subscriptions(ctx);
+    });
+
+    // prints a status message: uptime and processed flats
+    this.telegraf.command(['cancel'], async ctx => {
+      this.cancel(ctx);
     });
 
     // prints a status message: uptime and processed flats
@@ -143,9 +153,31 @@ export class TelegramProcessor extends Processor {
     }
   }
 
-  private async search(ctx: any) {
-    console.log('received command');
+  private async cancel(ctx: any) {
+    ctx.session.intent = null;
+    ctx.session.step = null;
+    await this.telegram.sendMessage(
+      ctx.chat.id,
+      `Ok. Just tell me, when you need anything.`,
+      {
+        reply_markup: {
+          remove_keyboard: true,
+        }
+      },
+    );
+  }
 
+  private async edit(ctx: any) {
+    await this.telegram.sendMessage(
+      ctx.chat.id,
+      `Hey ${mentionSender(ctx)}, you can [edit your searches here](http://www.floschnell.de:5555?id=${ctx.from.id}).`,
+      {
+        parse_mode: 'markdown',
+      },
+    );
+  }
+
+  private async search(ctx: any) {
     ctx.session.intent = 'create';
     ctx.session.step = 'city:set';
     ctx.session.search = new Search({
